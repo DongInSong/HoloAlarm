@@ -1,0 +1,57 @@
+{
+  "name": "hololive",
+  "version": "1.0.0",
+  "description": "Hololive Desktop Alarm App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "electron:window": "SET ELECTRON_START_URL=http://localhost:3000 && yarn electron",
+    "build": "react-scripts build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "production": "cross-env NODE_ENV=production electron .",
+    "build:win64": "cross-env NODE_ENV=production electron-builder --win nsis:x64",
+    "build:linux64": "cross-env NODE_ENV=production electron-builder --linux --x64"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DongInSong/alarmApp.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DongInSong/alarmApp/issues"
+  },
+  "homepage": "https://github.com/DongInSong/alarmAppp#readme",
+  "devDependencies": {
+    "electron": "^25.1.0",
+    "electron-builder": "^24.4.0"
+  },
+  "dependencies": {
+    "@picocss/pico": "^1.5.10",
+    "axios": "^1.4.0",
+    "cross-env": "^7.0.3",
+    "electron-progressbar": "^2.1.0",
+    "electron-reload": "^2.0.0-alpha.1",
+    "electron-updater": "^6.1.1",
+    "holodex.js": "^2.0.5"
+  },
+  "build": {
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "./img/channels4_profile.jpg",
+      "appId": "hololive"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "uninstallDisplayName": "Hololive"
+    },
+    "directories": {
+      "buildResources": "./build/",
+      "output": "./dist/"
+    }
+  }
+}

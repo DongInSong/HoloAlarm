@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta https-equiv="Content-Security-Policy" content="default-src *;" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="./node_modules/@picocss/pico/css/pico.min.css"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Hololive!</title>
+  </head>
+  <body id="body" class="body">
+    <main
+      id="main"
+      class="container"
+    >
+      <details>
+        <summary
+          role="button"
+          class="secondary"
+          style="
+            background-color: rgba(255, 0, 0, 0.76);
+            color: white;
+            font-weight: bold;
+            border-color: white;
+          "
+        >
+          ◉ LIVE!
+        </summary>
+        <div id="live" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">Gen 0</summary>
+        <div id="Gen0" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">Gen 1</summary>
+        <div id="Gen1" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">Gen 2</summary>
+        <div id="Gen2" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">Gamers</summary>
+        <div id="Gamers" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">Gen 3</summary>
+        <div id="Gen3" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">Gen 4</summary>
+        <div id="Gen4" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">Gen 5</summary>
+        <div id="Gen5" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">Gen 6</summary>
+        <div id="Gen6" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">-Myth-</summary>
+        <div id="Myth" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">CouncilRyS</summary>
+        <div id="Councilrys" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">ID 1</summary>
+        <div id="ID1" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">ID 2</summary>
+        <div id="ID2" class="items"></div>
+      </details>
+      <details>
+        <summary class="gen">ID 3</summary>
+        <div id="ID3" class="items"></div>
+      </details>
+      <!-- <details>
+        <summary>Yagoo</summary>
+        <div id="Yagoo" class="items"></div>
+      </details> -->
+    </main>
+    <button class="float" id="reload" states="reload">↻</button>
+  </body>
+  <script src="./renderer.js" type="text/javascript"></script>
+</html>
