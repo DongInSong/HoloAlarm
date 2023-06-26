@@ -14,25 +14,23 @@ function sliceData(data) {
 }
 
 window.ipcRender.receive("setting:load", (data) => {
-  document.getElementById("body").style.backgroundImage = "url(./img/background/" + data["background"] + ".png)";
+  // document.getElementById("body").style.backgroundImage = "url(./img/background/" + data["background"] + ".png)";
+  // document.getElementsByClassName("live_btn")[0].setAttribute("theme", data["background"]);
+  changeTheme(data["background"]);
 });
 
 window.ipcRender.receive("channel:load", (data) => {
   sliceData(data);
 
-  for (i = 0; i < data.length; i++) {
+  for (i = 0; i < data.length - 1; i++) {
     let artile = document.createElement("article");
     let eng_name = document.createElement("header");
     let live_info = document.createElement("footer");
     let scheduled_info = document.createElement("footer");
     let photo = document.createElement("img");
-    artile.style.width = "250px";
-    artile.style.textAlign = "center";
-    eng_name.style.textAlign = "center";
-    eng_name.style.fontWeight = "bold";
-    photo.style.width = "128px";
-    photo.style.borderRadius = "10px";
-    photo.style.height = "128px";
+    artile.classList = "artile"
+    eng_name.className = "eng_name";
+    photo.className = "photo";
     live_info.style.display = "none";
     live_info.style.padding = 0;
     scheduled_info.style.display = "none";
@@ -53,7 +51,7 @@ window.ipcRender.receive("channel:load", (data) => {
     photo.style.cursor = "pointer";
     photo.draggable = false;
     photo.addEventListener("click", (evt) => {
-      chagneBackground(eng_name.innerText.split(" ")[0]);
+      changeTheme(eng_name.innerText.split(" ")[0]);
       let obj = new Object();
       obj.background = eng_name.innerText.split(" ")[0];
       window.ipcRender.send("setting:save", obj);
@@ -76,7 +74,6 @@ window.ipcRender.receive("channel:load", (data) => {
     else if (i < 48) ID1.appendChild(artile);
     else if (i < 51) ID2.appendChild(artile);
     else if (i < 54) ID3.appendChild(artile);
-    else Yagoo.appendChild(artile);
 
     document.getElementById("name_" + i).innerText = data[i].raw.english_name;
     document.getElementById("photo_" + i).src = data[i].raw.photo;
@@ -259,7 +256,7 @@ function liveUptime(value, id) {
       uptimeDate = new Date(current_time - start_actual);
 
       uptimeDiv.innerHTML =
-        '<span style = "color:rgba(255, 0, 0, 0.76)">' +
+        '<span style = "color:rgba(255, 60, 60);">' +
         String(uptimeDate.getUTCHours()).padStart(2, "0") +
         " : " +
         String(uptimeDate.getUTCMinutes()).padStart(2, "0") +
@@ -378,8 +375,10 @@ function removeFooter(parent) {
   return false;
 }
 
-function chagneBackground(target) {
+function changeTheme(target) {
   document.getElementById("body").style.backgroundImage = "url(./img/background/" + target + ".png)";
+  // document.getElementsByClassName("live_btn")[0].setAttribute("theme", target);
+  document.getElementById("body").setAttribute("theme", target);
 }
 
 function removeInterval(index) {

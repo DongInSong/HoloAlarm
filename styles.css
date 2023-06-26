@@ -20,19 +20,14 @@
   }
 }
 
-
 .body {
-  background-image: url("./img/background/hakos.png");
+  /* background-image: url("./img/background/hakos.png"); */
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-size: cover;
-  background-position: center 300px;
+  background-position: center 250px;
+  height: auto;
 }
-
-/* .container {
-  padding-top: 20px;
-  padding-bottom: 0;
-} */
 
 .gen {
   font-weight: bold;
@@ -66,4 +61,74 @@
 
 .div {
   text-align: center;
+}
+
+.live_btn {
+  background-color: var(--live-color);
+  color: var(--text-color);
+  font-weight: bold;
+  border-color: white;
+  border-width: 0.15rem;
+}
+
+.artile {
+  width: 250px;
+  text-align: center;
+  border: solid;
+  border-width: 0.15rem;
+  /* border-color: var(--border-color); */
+}
+
+.eng_name {
+  text-align: center;
+  font-weight: bold;
+}
+
+.photo {
+  width: 128px;
+  border-radius: 10px;
+  height: 128px;
+}
+
+:root {
+  --live-color: rgba(255, 0, 0, 0.76);
+  --text-color: white;
+  --text-color: hsl(207, 33%, 87%);
+  --card-border-color: hsl(205, 16%, 77%);
+  --accordion-border-color: 0;
+}
+
+[theme="Ninomae"] {
+  --live-color: #4b3e59;
+  --card-sectionning-background-color: #352b40cb;
+  --card-background-color: #493e58cb;
+  --accordion-active-summary-color: #cf8954;
+}
+
+[theme="Watson"] {
+  --live-color: #a18d79;
+  --card-sectionning-background-color: #553a3acb;
+  --card-background-color: #796957cb;
+  --accordion-active-summary-color: #f5ddbf;
+}
+
+[theme="Gawr"] {
+  --live-color: #3f85b8;
+  --card-sectionning-background-color: #638fa8cb;
+  --card-background-color: #2c658ecb;
+  --accordion-active-summary-color: #499ad4;
+}
+
+[theme="Nanashi"] {
+  --live-color: #8a6e4ccb;
+  --card-sectionning-background-color: #412b30cb;
+  --card-background-color: #57432acb;
+  --accordion-active-summary-color: #1e8a6f;
+}
+
+[theme="Hakos"] {
+  --live-color: #ce2218;
+  --card-sectionning-background-color: #861c16;
+  --card-background-color: #b8514baf;
+  --accordion-active-summary-color: #ca504a;
 }

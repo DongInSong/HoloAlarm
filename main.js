@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, Notification, Tray, Menu, nativeImage, shell, screen } = require("electron");
+
 // require("electron-reload")(__dirname, {
 //   electron: require(`${__dirname}/node_modules/electron`),
 // });
@@ -9,20 +10,21 @@ const fs = require("fs");
 const fn = `${app.getPath("userData")}/localSetting.json`;
 const key = "2de44c8d-44c1-40cd-88b1-cf51f7777e95";
 const client = new HolodexApiClient({ apiKey: key });
-const updater = path.join(__dirname, "updater.js")
+const updater = path.join(__dirname, "updater.js");
 
 let schedule;
 let live_period = 1000 * 60 * 1;
 let schedule_peried = 1000 * 60 * 10;
 
-process.env.NODE_ENV = process.env.NODE_ENV && process.env.NODE_ENV.trim().toLowerCase() == "production" ? "production" : "development";
+// process.env.NODE_ENV = process.env.NODE_ENV && process.env.NODE_ENV.trim().toLowerCase() == "production" ? "production" : "development";
+process.env.NODE_ENV = "production";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 app.disableHardwareAcceleration();
 
-app.on("ready", async() => {
+app.on("ready", async () => {
   app.setAppUserModelId(app.name);
-  if(!isDevelopment) launchAtStartIp();
+  if (!isDevelopment) launchAtStartIp();
   console.log(isDevelopment);
 });
 
@@ -39,18 +41,14 @@ app.once("ready", (e) => {
   const height = display.bounds.height;
   const window = new BrowserWindow({
     width: 300,
-    height: 813,
+    height: 791,
     x: width,
     y: height - 20,
     show: false,
-    // center: true,
     autoHideMenuBar: true,
     minimizable: false,
-    resizable: false,
+    resizable: isDevelopment ? true : false,
     webPreferences: {
-      // nodeIntegration: false,
-      // webSecurity: true,
-      // sandbox: true
       nodeIntegration: true,
       preload: path.join(__dirname, "preload.js"),
     },
@@ -58,7 +56,7 @@ app.once("ready", (e) => {
   });
 
   window.show();
-  // window.webContents.openDevTools();
+
   window.loadFile("index.html");
   window.on("close", (e) => {
     if (window.isVisible()) {
@@ -69,13 +67,17 @@ app.once("ready", (e) => {
 
   window.webContents.on("did-finish-load", function () {
     load_setting();
+    
+    if (isDevelopment) {
+      load_channels();
+    } else if (!isDevelopment) {
+      load_channels()
+        .then(() => load_lives())
+        .then(() => load_schedule());
 
-    load_channels()
-      .then(() => load_lives())
-      .then(() => load_schedule());
-
-    start_update_lives();
-    start_update_schedules();
+      start_update_lives();
+      start_update_schedules();
+    }
   });
 
   window.on("hide", (e) => {
@@ -154,7 +156,7 @@ app.once("ready", (e) => {
   async function load_channels() {
     window.webContents.send("channel:load", await getChannels("Hololive"));
   }
-  
+
   async function load_schedule() {
     window.webContents.send("scheduled:load", await getScheduledVideo("Hololive"));
   }
