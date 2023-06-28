@@ -43,7 +43,7 @@ app.once("ready", (e) => {
     width: 300,
     height: 791,
     x: width,
-    y: height - 20,
+    y: height,
     show: false,
     autoHideMenuBar: true,
     minimizable: false,
@@ -69,7 +69,12 @@ app.once("ready", (e) => {
     load_setting();
     
     if (isDevelopment) {
-      load_channels();
+      load_channels()
+      //   .then(() => load_lives())
+      //   .then(() => load_schedule());
+
+      // start_update_lives();
+      // start_update_schedules();
     } else if (!isDevelopment) {
       load_channels()
         .then(() => load_lives())

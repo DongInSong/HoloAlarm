@@ -106,7 +106,7 @@ window.ipcRender.receive("live:load", (data) => {
       delete onAirObject[result[i]];
       console.table(onAir);
       console.table(onAirObject);
-      console.log(result[i] + "is ended ");
+      console.log(result[i] + " is ended ");
     }
   }
   //console.group("Check Live Stream");
@@ -190,7 +190,7 @@ window.ipcRender.receive("live:load", (data) => {
           for (var k = 0; k < onAir.length; k += 2) {
             onAirObject[onAir[k]] = onAir[k + 1];
           }
-          console.log(data[i].raw.channel.english_name + "is now OnAir");
+          console.log(data[i].raw.channel.english_name + " is now OnAir");
           if (!isFirstLoad) sendNotification(data[i]);
         }
       }
@@ -318,9 +318,12 @@ alarm.addEventListener("click", (evt) => {
 function changeAlarm(state) {
   if (state === "on") {
     alarm.innerText = "🔔";
+    alarm.states = "on";
   } else {
     alarm.innerText = "🔕";
+    alarm.states = "off";
   }
+  console.log(alarm.states)
 }
 
 async function scrollUp() {
@@ -332,7 +335,9 @@ async function scrollUp() {
 }
 
 async function sendNotification(data) {
-  if (alarm.states === "on") {
+  if (alarm.states !== "on") {
+    return 0;
+  }
     var blob = await fetch(data.raw.channel.photo).then((r) => r.blob());
     let dataUrl = await new Promise((resolve) => {
       let reader = new FileReader();
@@ -342,7 +347,6 @@ async function sendNotification(data) {
     // return dataUrl;
     var content = { name: data.raw.channel.english_name, title: data.raw.title, photo: dataUrl, id: data.raw.id };
     window.ipcRender.send("notification:send", content);
-  }
 }
 
 function scheduletime(value) {
