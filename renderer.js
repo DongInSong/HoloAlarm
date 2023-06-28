@@ -17,6 +17,7 @@ window.ipcRender.receive("setting:load", (data) => {
   // document.getElementById("body").style.backgroundImage = "url(./img/background/" + data["background"] + ".png)";
   // document.getElementsByClassName("live_btn")[0].setAttribute("theme", data["background"]);
   changeTheme(data["background"]);
+  changeAlarm(data["alarm"]);
 });
 
 window.ipcRender.receive("channel:load", (data) => {
@@ -28,7 +29,7 @@ window.ipcRender.receive("channel:load", (data) => {
     let live_info = document.createElement("footer");
     let scheduled_info = document.createElement("footer");
     let photo = document.createElement("img");
-    artile.classList = "artile"
+    artile.classList = "artile";
     eng_name.className = "eng_name";
     photo.className = "photo";
     live_info.style.display = "none";
@@ -220,7 +221,7 @@ window.ipcRender.receive("scheduled:load", (data) => {
         title.innerText = data[i].raw.title;
         if (data[i].raw.topic_id === "membersonly") {
           scheduled_div.setAttribute("data-theme", "light");
-        } 
+        }
 
         scheduled_div.appendChild(title);
         scheduled_div.appendChild(schedule);
@@ -302,6 +303,26 @@ reload.addEventListener("click", (evt) => {
   }
 });
 
+alarm.addEventListener("click", (evt) => {
+  if (alarm.states === "on") {
+    alarm.states = "off";
+  } else {
+    alarm.states = "on";
+  }
+  changeAlarm(alarm.states)
+  let obj = new Object();
+  obj.alarm = alarm.states;
+  window.ipcRender.send("setting:save", obj);
+});
+
+function changeAlarm(state) {
+  if (state === "on") {
+    alarm.innerText = "🔔";
+  } else {
+    alarm.innerText = "🔕";
+  }
+}
+
 async function scrollUp() {
   const c = document.documentElement.scrollTop || document.body.scrollTop;
   if (c > 0) {
@@ -311,15 +332,17 @@ async function scrollUp() {
 }
 
 async function sendNotification(data) {
-  var blob = await fetch(data.raw.channel.photo).then((r) => r.blob());
-  let dataUrl = await new Promise((resolve) => {
-    let reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.readAsDataURL(blob);
-  });
-  // return dataUrl;
-  var content = { name: data.raw.channel.english_name, title: data.raw.title, photo: dataUrl, id: data.raw.id };
-  window.ipcRender.send("notification:send", content);
+  if (alarm.states === "on") {
+    var blob = await fetch(data.raw.channel.photo).then((r) => r.blob());
+    let dataUrl = await new Promise((resolve) => {
+      let reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(blob);
+    });
+    // return dataUrl;
+    var content = { name: data.raw.channel.english_name, title: data.raw.title, photo: dataUrl, id: data.raw.id };
+    window.ipcRender.send("notification:send", content);
+  }
 }
 
 function scheduletime(value) {

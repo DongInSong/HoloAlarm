@@ -16,8 +16,8 @@ let schedule;
 let live_period = 1000 * 60 * 1;
 let schedule_peried = 1000 * 60 * 10;
 
-// process.env.NODE_ENV = process.env.NODE_ENV && process.env.NODE_ENV.trim().toLowerCase() == "production" ? "production" : "development";
-process.env.NODE_ENV = "production";
+process.env.NODE_ENV = process.env.NODE_ENV && process.env.NODE_ENV.trim().toLowerCase() == "production" ? "production" : "development";
+// process.env.NODE_ENV = "production";
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 app.disableHardwareAcceleration();
@@ -232,6 +232,7 @@ function readSetting() {
   } catch {
     let defaultSetting = {
       background: "Hakos",
+      alarm: "on"
     };
     fs.writeFileSync(fn, JSON.stringify(defaultSetting));
     setting = JSON.parse(fs.readFileSync(fn, "utf8"));
