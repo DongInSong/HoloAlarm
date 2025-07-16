@@ -8,6 +8,7 @@ const settingsModal = document.getElementById('settings-modal');
 const closeBtn = settingsModal.querySelector('.close');
 const apiKeyInput = document.getElementById('api-key-input');
 const saveApiKeyBtn = document.getElementById('save-api-key');
+const themeSwitch = document.getElementById('theme-switch');
 
 // --- Event Listeners ---
 settingsBtn.addEventListener('click', () => {
@@ -27,6 +28,12 @@ saveApiKeyBtn.addEventListener('click', () => {
     window.ipcRender.send("setting:save", { apiKey: apiKey });
     settingsModal.close();
   }
+});
+
+themeSwitch.addEventListener('change', () => {
+  const theme = themeSwitch.checked ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  window.ipcRender.send("setting:save", { theme: theme });
 });
 
 reload.addEventListener("click", (evt) => {
@@ -56,6 +63,11 @@ window.ipcRender.receive("setting:load", (data) => {
     settingsModal.showModal();
   }
   apiKeyInput.value = data.apiKey || '';
+  
+  const currentTheme = data.theme || 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  themeSwitch.checked = currentTheme === 'dark';
+
   favorites = data.favorites || [];
   if (data.backgroundUrl) {
     changeBackground(data.backgroundUrl);

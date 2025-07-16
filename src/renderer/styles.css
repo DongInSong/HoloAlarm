@@ -2,17 +2,27 @@
 
 /* 1. Root Variables & Basic Setup
 -------------------------------------------------- */
-:root {
+:root, html[data-theme='light'] {
   --holo-blue: #00a9d8;
   --holo-blue-dark: #0087ac;
-  --background-color: #e2e8f0; /* Slightly darker light gray */
+  --background-color: #f0f2f5; /* Light mode background */
   --card-background: #ffffff;   /* White */
-  --card-border: #cbd5e0;      /* Darker Light Gray Border */
-  --text-primary: #1a202c;      /* Darker Text */
-  --text-secondary: #718096;   /* Medium Gray Text */
+  --card-border: #e2e8f0;      /* Light Gray Border */
+  --text-primary: #1a202c;      /* Dark Gray Text */
+  --text-secondary: #4a5568;   /* Medium Gray Text */
   --font-family: 'M PLUS Rounded 1c', sans-serif;
   --border-radius: 8px;
   --pico-font-family: var(--font-family); /* Override Pico default */
+}
+
+html[data-theme='dark'] {
+  --holo-blue: #00a9d8;
+  --holo-blue-dark: #0087ac;
+  --background-color: #1a202c; /* Dark Charcoal */
+  --card-background: #2d3748;   /* Slate Gray */
+  --card-border: #4a5568;      /* Gray */
+  --text-primary: #edf2f7;      /* Light Gray */
+  --text-secondary: #a0aec0;   /* Medium Gray */
 }
 
 ::-webkit-scrollbar {
@@ -108,7 +118,7 @@ details[open] > summary::before {
 }
 
 .live_btn {
-  background-color: #e53e3e;
+  background-color: #e53e3ed6;
   color: white;
   font-weight: bold;
   border: none;
@@ -175,7 +185,7 @@ article {
 }
 
 .artile:hover::before {
-  opacity: 0.6; /* Less intense on hover */
+  opacity: 0.4; /* Less intense on hover */
   filter: blur(3px) brightness(1); /* Softer effect */
 }
 

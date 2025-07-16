@@ -71,7 +71,7 @@ app.once("ready", (e) => {
     },
     icon: path.join(__dirname, "..", "..", "img", "channels4_profile.jpg"),
   });
-  window.webContents.openDevTools();
+  // window.webContents.openDevTools();
   window.show();
 
   window.loadFile(path.join(__dirname, "..", "renderer", "index.html"));

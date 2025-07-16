@@ -30,6 +30,7 @@ function readSetting() {
       favorites: [],
       backgroundUrl: null,
       apiKey: null,
+      theme: "light",
     };
     fs.writeFileSync(settingsFilePath, JSON.stringify(defaultSetting, null, 2));
     return defaultSetting;
