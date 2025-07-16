@@ -19,6 +19,7 @@ Here are some screenshots of the application:
     <td>
 
 <ol>
+  <br>
   <li><strong>**Get API Key from Holodex:** </strong></li>
     <br>
     <p> - Go to the [Holodex](https://holodex.net/) website and log in.</p>
@@ -38,6 +39,14 @@ Here are some screenshots of the application:
     </td>
   </tr>
 </table>
+
+## Configuration
+
+The application settings are stored in `localSetting.json`. You can find this file in the following locations depending on your operating system:
+
+-   **Windows:** `C:\Users\{USERNAME}\AppData\Roaming\holo-alarm\localSetting.json`
+-   **Linux:** `~/.config/holo-alarm/localSetting.json`
+-   **macOS:** `~/Library/Application Support/holo-alarm/localSetting.json`
 
 
 ## Build and Run
