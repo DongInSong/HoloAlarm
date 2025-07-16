@@ -12,11 +12,18 @@ Here are some screenshots of the application:
 ---|---|---
 ![Live Streams](img/sample_live.png) | ![Favorites](img/sample_fav.png) | ![Dark Mode](img/sample_darkmode.png)
 
+## Usage
 
+1.  **Get API Key from Holodex:**
+    -   Go to the [Holodex](https://holodex.net/) website and log in.
+    -   Navigate to the **Account** > **Developer Settings** page.
+    -   Click the **"New API Key"** button to generate a new API key.
+    -   Copy the generated API key.
 
-
-
-
+2.  **Run the Application and Set API Key:**
+    -   When you first run the application, you will be prompted to enter the Holodex API key.
+    -   Paste the copied API key into the input field and save.
+    -   ![API Key Input](img/sample_api.png)
 
 ## Build and Run
 
