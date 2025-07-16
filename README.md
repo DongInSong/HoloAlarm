@@ -14,16 +14,31 @@ Here are some screenshots of the application:
 
 ## Usage
 
-1.  **Get API Key from Holodex:**
-    -   Go to the [Holodex](https://holodex.net/) website and log in.
-    -   Navigate to the **Account** > **Developer Settings** page.
-    -   Click the **"New API Key"** button to generate a new API key.
-    -   Copy the generated API key.
+<table>
+  <tr>
+    <td>
 
-2.  **Run the Application and Set API Key:**
-    -   When you first run the application, you will be prompted to enter the Holodex API key.
-    -   Paste the copied API key into the input field and save.
-    -   ![API Key Input](img/sample_api.png)
+<ol>
+  <li><strong>**Get API Key from Holodex:** </strong></li>
+    <br>
+    <p> - Go to the [Holodex](https://holodex.net/) website and log in.</p>
+    <p> - Navigate to the **Account** > **Developer Settings** page.</p>
+    <p> - Click the **"New API Key"** button to generate a new API key.</p>
+    <p> - Copy the generated API key.</p>
+    <br>
+  <li><strong>**Run the Application and Set API Key:**</strong></li>
+    <br>
+    <p> - When you first run the application, you will be prompted to enter the Holodex API key.</p>
+    <p> - Paste the copied API key into the input field and save.</p>
+</ol>
+
+</td>
+    <td>
+      <img src="img/sample_api.png" alt="api" width="250">
+    </td>
+  </tr>
+</table>
+
 
 ## Build and Run
 
