@@ -167,8 +167,26 @@ app.once("ready", (e) => {
     window.webContents.send("setting:load", settingsManager.readSetting());
   }
 
+  function handleApiError(error, context) {
+    console.error(`Failed to load ${context}:`, error.message);
+    let errorMessage;
+    if (error.code === 'ENOTFOUND' || error.message.includes('net::')) {
+      errorMessage = `Failed to connect to Holodex. Please check your internet connection.`;
+    } else if (error.response && error.response.status === 403) {
+      errorMessage = "Invalid API Key. Please check your settings.";
+    } else {
+      errorMessage = `Failed to load ${context} data. Please try again later.`;
+    }
+    window.webContents.send("api:error", { message: errorMessage });
+  }
+
   async function load_lives() {
-    window.webContents.send("live:load", await holodexService.getLiveVideo("Hololive"));
+    try {
+      const lives = await holodexService.getLiveVideo("Hololive");
+      window.webContents.send("live:load", lives);
+    } catch (error) {
+      handleApiError(error, 'live streams');
+    }
   }
 
   async function load_channels() {
@@ -176,17 +194,17 @@ app.once("ready", (e) => {
       const channels = await holodexService.getChannels("Hololive");
       window.webContents.send("channel:load", channels);
     } catch (error) {
-      console.error("Failed to load channels:", error.message);
-      if (error.response && error.response.status === 403) {
-        window.webContents.send("api:error", { message: "Invalid API Key. Please check your settings." });
-      } else {
-        window.webContents.send("api:error", { message: "Failed to load data. Please check your connection." });
-      }
+      handleApiError(error, 'channels');
     }
   }
 
   async function load_schedule() {
-    window.webContents.send("scheduled:load", await holodexService.getScheduledVideo("Hololive"));
+    try {
+      const schedules = await holodexService.getScheduledVideo("Hololive");
+      window.webContents.send("scheduled:load", schedules);
+    } catch (error) {
+      handleApiError(error, 'schedules');
+    }
   }
 });
 

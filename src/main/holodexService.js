@@ -18,19 +18,29 @@ function initClient() {
 // Initial initialization
 initClient();
 
-function getLiveVideo(org) {
+async function getLiveVideo(org) {
   if (!client) return Promise.resolve([]);
-  return client.getLiveVideos({ org: org, status: "live" });
+  try {
+    return await client.getLiveVideos({ org: org, status: "live" });
+  } catch (error) {
+    console.error("Holodex API error in getLiveVideo:", error.message);
+    throw error;
+  }
 }
 
-function getScheduledVideo(org) {
+async function getScheduledVideo(org) {
   if (!client) return Promise.resolve([]);
-  return client.getLiveVideos({
-    org: org,
-    limit: 50,
-    status: "upcoming",
-    max_upcoming_hours: 24,
-  });
+  try {
+    return await client.getLiveVideos({
+      org: org,
+      limit: 50,
+      status: "upcoming",
+      max_upcoming_hours: 24,
+    });
+  } catch (error) {
+    console.error("Holodex API error in getScheduledVideo:", error.message);
+    throw error;
+  }
 }
 
 async function getChannels(org) {
