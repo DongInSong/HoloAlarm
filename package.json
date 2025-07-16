@@ -1,7 +1,7 @@
 {
-  "name": "hololive",
+  "name": "holo-alarm",
   "version": "1.1.0",
-  "description": "Hololive Desktop Alarm App",
+  "description": "A desktop app to get notifications for Hololive live streams.",
   "main": "src/main/main.js",
   "scripts": {
     "start": "npx electron .",
@@ -41,13 +41,13 @@
         "nsis"
       ],
       "icon": "./img/channels4_profile.jpg",
-      "appId": "hololive"
+      "appId": "com.holoalarm.app"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
-      "uninstallDisplayName": "Hololive"
+      "uninstallDisplayName": "HoloAlarm"
     },
     "directories": {
       "buildResources": "./build/",

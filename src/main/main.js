@@ -20,8 +20,10 @@ const isDevelopment = process.env.NODE_ENV !== "production";
 
 app.disableHardwareAcceleration();
 
+const packageJson = require("../../package.json");
+
 app.on("ready", async () => {
-  app.setAppUserModelId(app.name);
+  app.setAppUserModelId(packageJson.name);
   if (!isDevelopment) launchAtStartIp();
   console.log(isDevelopment);
 });
@@ -69,7 +71,7 @@ app.once("ready", (e) => {
     },
     icon: path.join(__dirname, "..", "..", "img", "channels4_profile.jpg"),
   });
-
+  window.webContents.openDevTools();
   window.show();
 
   window.loadFile(path.join(__dirname, "..", "renderer", "index.html"));

@@ -178,6 +178,7 @@ window.ipcRender.receive("api:error", (error) => {
 });
 
 window.ipcRender.receive("live:load", (liveVideos) => {
+  const liveDetails = document.querySelector('#main details:first-child');
   const liveContainer = document.getElementById("live");
   const currentlyLiveIds = liveVideos.map(v => v.raw.channel.id);
   const previouslyLiveIds = Array.from(liveContainer.children).map(c => c.id.replace('live_section_card_', ''));
@@ -247,6 +248,13 @@ window.ipcRender.receive("live:load", (liveVideos) => {
     }
   });
   updateLiveFavorites();
+
+  // Disable details if empty
+  if (liveContainer.children.length === 0) {
+    liveDetails.classList.add('disabled-details');
+  } else {
+    liveDetails.classList.remove('disabled-details');
+  }
 });
 
 window.ipcRender.receive("scheduled:load", (scheduledVideos) => {
@@ -410,6 +418,7 @@ function updateFavoriteStar(channelId) {
 
 function updateFavoritesSection() {
   const favoritesContainer = document.getElementById("favorites");
+  const favoritesDetails = favoritesContainer.closest('details');
   if (!favoritesContainer) return;
   favoritesContainer.innerHTML = "";
 
@@ -443,6 +452,14 @@ function updateFavoritesSection() {
     }
   });
   updateLiveFavorites();
+
+  // Disable details if empty
+  if (favoritesContainer.children.length === 0) {
+    favoritesDetails.classList.add('disabled-details');
+    favoritesDetails.open = false; // Close details when it becomes empty
+  } else {
+    favoritesDetails.classList.remove('disabled-details');
+  }
 }
 
 function updateLiveFavorites() {
