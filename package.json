@@ -40,7 +40,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "./img/channels4_profile.jpg",
+      "icon": "./img/icon.jpg",
       "appId": "com.holoalarm.app"
     },
     "nsis": {

@@ -1,3 +1,6 @@
+// This application uses the Holodex API.
+// For more information, please see the Holodex Public License.
+// This service is provided "as is" and without any warranty.
 const { HolodexApiClient } = require("holodex.js");
 const settingsManager = require("./settingsManager");
 
