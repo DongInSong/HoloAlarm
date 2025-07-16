@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DongInSong/alarmApp.git"
+    "url": "git+https://github.com/DongInSong/holo-alarm.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/DongInSong/alarmApp/issues"
+    "url": "https://github.com/DongInSong/holo-alarm/issues"
   },
-  "homepage": "https://github.com/DongInSong/alarmAppp#readme",
+  "homepage": "https://github.com/DongInSong/holo-alarm#readme",
   "devDependencies": {
     "electron": "^25.1.0",
     "electron-builder": "^24.4.0"
@@ -36,6 +36,13 @@
     "holodex.js": "^2.0.5"
   },
   "build": {
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "DongInSong",
+        "repo": "holo-alarm"
+      }
+    ],
     "win": {
       "target": [
         "nsis"
