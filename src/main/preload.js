@@ -8,7 +8,7 @@ const ipc = {
     // From render to main.
     send: ["setting:save", "notification:send", "live_url:send", "channel_url:send", "reload"],
     // From main to render.
-    receive: ["setting:load", "onair:load", "live:load", "channel:load", "scheduled:load"],
+    receive: ["setting:load", "onair:load", "live:load", "channel:load", "scheduled:load", "api:error"],
     // From render to main and back again.
     sendReceive: [],
   },

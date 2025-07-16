@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta https-equiv="Content-Security-Policy" content="default-src *;" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="../../node_modules/@picocss/pico/css/pico.min.css" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Hololive!</title>
+  </head>
+  <body id="body" class="body">
+    <div id="error-container" style="display: none; padding: 1rem; background-color: var(--pico-background-color); color: var(--pico-color); text-align: center; position: sticky; top: 0; z-index: 100;"></div>
+    <main id="main" class="container">
+      <details style="margin-top: -10px;">
+        <summary
+          role="button"
+          class="live_btn"
+          style="margin: 0"
+        >
+          ◉ LIVE!
+        </summary>
+        <div id="live" class="items"></div>
+      </details>
+      <details open>
+        <summary class="gen">
+          <i class="fas fa-star"></i> Favorites
+        </summary>
+        <div id="favorites" class="items"></div>
+      </details>
+    </main>
+    <button class="reload" id="reload" states="reload">↻</button>
+    <button class="settings" id="settings-btn"><i class="fas fa-cog"></i></button>
+
+    <dialog id="settings-modal">
+      <article>
+        <header>
+          <a href="#close" aria-label="Close" class="close"></a>
+          API Key Settings
+        </header>
+        <p>
+          Please enter your Holodex API key. You can get your API key from <a href="https://holodex.net/login" target="_blank">holodex.net</a>.
+        </p>
+        <input type="text" id="api-key-input" placeholder="API Key">
+        <footer>
+          <button id="save-api-key" class="contrast">Save</button>
+        </footer>
+      </article>
+    </dialog>
+  </body>
+  <script src="./renderer.js" type="text/javascript"></script>
+</html>
