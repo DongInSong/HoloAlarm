@@ -255,6 +255,13 @@ footer i {
   background-color: rgba(0, 0, 0, 0.15);
 }
 
+.live-info-content span {
+  font-size: 0.9rem; /* Adjust title font size */
+  font-weight: 500;
+  /* display: block; */
+  margin-bottom: 0.25rem;
+}
+
 /* 7. API Error Message
 -------------------------------------------------- */
 #api-error-message {
