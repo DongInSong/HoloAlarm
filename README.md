@@ -6,7 +6,7 @@
 ![Dark Mode](img/sample_full.png)
 __HoloAlarm: Your Compact Hololive Stream Companion__
 
-HoloAlarm is a sleek, fan-made desktop app for Hololive enthusiasts. With its vertical, edge-docking layout and card-based UI, it keeps you updated on live and upcoming streams—without cluttering your screen.
+HoloAlarm is a sleek, fan-made desktop app for Hololive dedicated Hololive fans. With its vertical, edge-docking layout and card-based UI, it keeps you updated on live and upcoming streams—without cluttering your screen.
 
 __Key Features:__
 
