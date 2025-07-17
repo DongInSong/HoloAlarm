@@ -1,6 +1,8 @@
 let favorites = [];
 let allChannels = [];
 let activeTimers = [];
+let liveVideos = [];
+let scheduledVideos = [];
 let animationFrameId;
 
 const settingsBtn = document.getElementById('settings-btn');
@@ -135,31 +137,30 @@ window.ipcRender.receive("api:error", (error) => {
   mainContainer.appendChild(errorDiv);
 });
 
-window.ipcRender.receive("live:load", (liveVideos) => {
+window.ipcRender.receive("live:load", (newLiveVideos) => {
+  liveVideos = newLiveVideos;
   const liveDetails = document.querySelector('#main details:first-child');
   const liveContainer = document.getElementById("live");
   
-  const currentlyLiveIds = liveVideos.map(v => v.raw.channel.id);
+  const currentlyLiveIds = newLiveVideos.map(v => v.raw.channel.id);
   const previousLiveIds = activeTimers.map(t => t.channelId);
 
   // Identify streams that have ended
   const endedStreamIds = previousLiveIds.filter(id => !currentlyLiveIds.includes(id));
   endedStreamIds.forEach(channelId => {
+    // Remove from live section
     const articleToRemove = document.getElementById(`live_section_card_${channelId}`);
     if (articleToRemove) liveContainer.removeChild(articleToRemove);
     
-    const liveInfo = document.getElementById(`live_info_${channelId}`);
-    if (liveInfo) {
-      liveInfo.style.display = "none";
-      liveInfo.innerHTML = "";
-    }
+    // Clear live info from all cards
+    updateCardLiveStatus(channelId, null);
   });
   
   // Filter out ended timers
   activeTimers = activeTimers.filter(timer => currentlyLiveIds.includes(timer.channelId));
 
   // Add new or update existing streams
-  liveVideos.forEach(video => {
+  newLiveVideos.forEach(video => {
     const channelId = video.raw.channel.id;
     let timer = activeTimers.find(t => t.channelId === channelId);
 
@@ -168,20 +169,13 @@ window.ipcRender.receive("live:load", (liveVideos) => {
       timer = {
         channelId: channelId,
         startTime: new Date(video.raw.start_actual),
-        element: null,
-        liveDiv: null
+        elements: [] // Changed to elements array
       };
       activeTimers.push(timer);
       createLiveCard(video, timer);
-    }
-    
-    // Update live info (viewers, etc.)
-    const liveInfoContainer = document.getElementById(`live_info_${channelId}`);
-    if (liveInfoContainer) {
-        const viewer = liveInfoContainer.querySelector('.viewer-count');
-        if (viewer && video.raw.topic_id !== "membersonly") {
-            viewer.innerHTML = `<i class="fas fa-eye"></i> ${video.raw.live_viewers.toLocaleString("en-US")} watching     `;
-        }
+    } else {
+       // Update existing live info (viewers, etc.)
+       updateCardLiveStatus(channelId, video, timer);
     }
   });
 
@@ -201,26 +195,18 @@ window.ipcRender.receive("live:load", (liveVideos) => {
   }
 });
 
-window.ipcRender.receive("scheduled:load", (scheduledVideos) => {
-  const scheduledContainers = document.querySelectorAll("[id^='scheduled_info_']");
-  scheduledContainers.forEach(info => {
+window.ipcRender.receive("scheduled:load", (newScheduledVideos) => {
+  scheduledVideos = newScheduledVideos;
+  // Clear all existing schedule info first
+  const allScheduledInfo = document.querySelectorAll("[id^='scheduled_info_']");
+  allScheduledInfo.forEach(info => {
     info.innerHTML = "";
     info.style.display = "none";
   });
 
-  const liveChannelIds = activeTimers.map(t => t.channelId);
-
-  scheduledVideos.forEach(video => {
+  newScheduledVideos.forEach(video => {
     const channelId = video.raw.channel.id;
-    // Do not show schedule if the channel is already live
-    if (liveChannelIds.includes(channelId)) {
-      return;
-    }
-    
-    const scheduledInfoContainer = document.getElementById(`scheduled_info_${channelId}`);
-    if (scheduledInfoContainer) {
-      createScheduleCard(video, scheduledInfoContainer);
-    }
+    updateCardScheduleStatus(channelId, video);
   });
 });
 
@@ -325,50 +311,22 @@ function createLiveCard(video, timer) {
         const infoContainer = clone.querySelector('.info-container');
         
         // Remove placeholder footers
-        infoContainer.querySelector(`#live_info_${channelId}`).remove();
-        infoContainer.querySelector(`#scheduled_info_${channelId}`).remove();
-        
-        const liveDiv = document.createElement("div");
-        liveDiv.className = 'live-info-content';
-        if (video.raw.topic_id === "membersonly") liveDiv.setAttribute("data-theme", "light");
-        
-        const title = document.createElement("span");
-        title.innerText = video.raw.title;
-        
-        const uptime = document.createElement("div");
-        uptime.className = "uptime-timer"; // Assign class for the timer element
-        timer.element = uptime; // Link element to timer object
-        
-        const viewer = document.createElement("small");
-        viewer.className = "viewer-count";
-        if (video.raw.topic_id !== "membersonly") {
-            viewer.innerHTML = `<i class="fas fa-eye" style="color: var(--holo-blue);"></i>   ${video.raw.live_viewers.toLocaleString("en-US")} watching     `;
-        }
-        
-        const topicDiv = topic(video.raw.topic_id);
-        
-        liveDiv.appendChild(title);
-        liveDiv.appendChild(uptime);
-        liveDiv.appendChild(viewer);
-        liveDiv.appendChild(topicDiv);
-        liveDiv.style.cursor = "pointer";
-        liveDiv.addEventListener("click", () => window.ipcRender.send("live_url:send", video.raw.id));
-        
+        const liveInfoPlaceholder = infoContainer.querySelector(`[id^='live_info_']`);
+        if(liveInfoPlaceholder) liveInfoPlaceholder.remove();
+        const scheduledInfoPlaceholder = infoContainer.querySelector(`[id^='scheduled_info_']`);
+        if(scheduledInfoPlaceholder) scheduledInfoPlaceholder.remove();
+
+        const liveDiv = createLiveDiv(video, timer);
         infoContainer.appendChild(liveDiv);
+        
         liveContainer.insertBefore(clone, liveContainer.firstChild);
         
-        // Also update the main profile card's live info
-        const mainLiveInfo = document.getElementById(`live_info_${channelId}`);
-        if(mainLiveInfo) {
-            mainLiveInfo.innerHTML = liveDiv.innerHTML;
-            mainLiveInfo.style.display = "block";
-            timer.liveDiv = mainLiveInfo.querySelector('.uptime-timer');
-            mainLiveInfo.addEventListener("click", () => window.ipcRender.send("live_url:send", video.raw.id));
-        }
+        // Update all cards for this channel
+        updateCardLiveStatus(channelId, video, timer);
     }
 }
 
-function createScheduleCard(video, container) {
+function createScheduleCard(video) {
     const scheduledDiv = document.createElement("article");
     scheduledDiv.className = "schedule-item";
     if (video.raw.topic_id === "membersonly") scheduledDiv.setAttribute("data-theme", "light");
@@ -384,9 +342,38 @@ function createScheduleCard(video, container) {
     scheduledDiv.appendChild(topicDiv);
     scheduledDiv.style.cursor = "pointer";
     scheduledDiv.addEventListener("click", () => window.ipcRender.send("live_url:send", video.raw.id));
+    
+    return scheduledDiv;
+}
 
-    container.appendChild(scheduledDiv);
-    container.style.display = "block";
+function createLiveDiv(video, timer) {
+    const liveDiv = document.createElement("div");
+    liveDiv.className = 'live-info-content';
+    if (video.raw.topic_id === "membersonly") liveDiv.setAttribute("data-theme", "light");
+    
+    const title = document.createElement("span");
+    title.innerText = video.raw.title;
+    
+    const uptime = document.createElement("div");
+    uptime.className = "uptime-timer";
+    if (timer) timer.elements.push(uptime);
+    
+    const viewer = document.createElement("small");
+    viewer.className = "viewer-count";
+    if (video.raw.topic_id !== "membersonly") {
+        viewer.innerHTML = `<i class="fas fa-eye" style="color: var(--holo-blue);"></i>   ${video.raw.live_viewers.toLocaleString("en-US")} watching     `;
+    }
+    
+    const topicDiv = topic(video.raw.topic_id);
+    
+    liveDiv.appendChild(title);
+    liveDiv.appendChild(uptime);
+    liveDiv.appendChild(viewer);
+    liveDiv.appendChild(topicDiv);
+    liveDiv.style.cursor = "pointer";
+    liveDiv.addEventListener("click", () => window.ipcRender.send("live_url:send", video.raw.id));
+    
+    return liveDiv;
 }
 
 // --- Timer & Update Functions ---
@@ -399,8 +386,9 @@ function updateAllTimers() {
           uptime.getUTCMinutes()
         ).padStart(2, "0")}:${String(uptime.getUTCSeconds()).padStart(2, "0")}</span>`;
     
-    if (timer.element) timer.element.innerHTML = timeString;
-    if (timer.liveDiv) timer.liveDiv.innerHTML = timeString;
+    timer.elements.forEach(element => {
+        if(element) element.innerHTML = timeString;
+    });
   });
 
   animationFrameId = requestAnimationFrame(updateAllTimers);
@@ -443,10 +431,36 @@ function updateFavoritesSection() {
       });
       clone.querySelector('.eng_name')?.addEventListener('click', () => window.ipcRender.send("channel_url:send", channelId));
       clone.querySelector('.photo')?.addEventListener('click', () => {
-        const themeName = clone.querySelector('.eng_name').innerText.split(" ")[0];
-        changeTheme(themeName);
-        window.ipcRender.send("setting:save", { background: themeName });
+        if (clone.dataset.bannerUrl) {
+            changeBackground(clone.dataset.bannerUrl);
+            window.ipcRender.send("setting:save", { backgroundUrl: clone.dataset.bannerUrl });
+        }
       });
+
+      // Manually sync live/schedule status on clone creation
+      const liveVideo = liveVideos.find(v => v.raw.channel.id === channelId);
+      const timer = activeTimers.find(t => t.channelId === channelId);
+      if (liveVideo && timer) {
+        const liveInfoContainer = clone.querySelector(`[id^='live_info_']`);
+        if (liveInfoContainer) {
+            liveInfoContainer.innerHTML = "";
+            const liveDiv = createLiveDiv(liveVideo, timer);
+            liveInfoContainer.appendChild(liveDiv);
+            liveInfoContainer.style.display = "block";
+        }
+      } else {
+        const scheduledVideo = scheduledVideos.find(v => v.raw.channel.id === channelId);
+        if (scheduledVideo) {
+            const scheduleInfoContainer = clone.querySelector(`[id^='scheduled_info_']`);
+            if (scheduleInfoContainer) {
+                scheduleInfoContainer.innerHTML = "";
+                const scheduleCard = createScheduleCard(scheduledVideo);
+                scheduleInfoContainer.appendChild(scheduleCard);
+                scheduleInfoContainer.style.display = "block";
+            }
+        }
+      }
+
       favoritesContainer.appendChild(clone);
     }
   });
@@ -467,6 +481,55 @@ function updateLiveFavorites() {
         if (starIcon) {
             starIcon.classList.toggle('fas', favorites.includes(channelId));
             starIcon.classList.toggle('far', !favorites.includes(channelId));
+        }
+    });
+}
+
+function updateCardLiveStatus(channelId, video, timer) {
+    const cards = document.querySelectorAll(`#profile_article_${channelId}, #favorites #profile_article_${channelId}`);
+    cards.forEach(card => {
+        const liveInfoContainer = card.querySelector(`[id^='live_info_']`);
+        if (!liveInfoContainer) return;
+
+        liveInfoContainer.innerHTML = ""; // Clear previous content
+        if (video) {
+            // If live, create and append live div
+            const liveDiv = createLiveDiv(video, timer);
+            liveInfoContainer.appendChild(liveDiv);
+            liveInfoContainer.style.display = "block";
+            liveInfoContainer.addEventListener("click", () => window.ipcRender.send("live_url:send", video.raw.id));
+            
+            const scheduleInfoContainer = card.querySelector(`[id^='scheduled_info_']`);
+            // Hide schedule info only if the card is in the main LIVE section
+            if (scheduleInfoContainer && card.closest('#live')) {
+                 scheduleInfoContainer.style.display = "none";
+            }
+
+        } else {
+            // If not live, hide container and check if schedule can be restored
+            liveInfoContainer.style.display = "none";
+            const scheduleInfoContainer = card.querySelector(`[id^='scheduled_info_']`);
+            if (scheduleInfoContainer && scheduleInfoContainer.hasChildNodes()) {
+                scheduleInfoContainer.style.display = "block";
+            }
+        }
+    });
+}
+
+function updateCardScheduleStatus(channelId, video) {
+    const cards = document.querySelectorAll(`#profile_article_${channelId}, #favorites #profile_article_${channelId}`);
+    cards.forEach(card => {
+        const scheduledInfoContainer = card.querySelector(`[id^='scheduled_info_']`);
+        if (scheduledInfoContainer) {
+            scheduledInfoContainer.innerHTML = ""; // Clear previous
+            const scheduleCard = createScheduleCard(video);
+            scheduledInfoContainer.appendChild(scheduleCard);
+            
+            // Only display if not currently live in a non-LIVE section card
+            const liveInfoContainer = card.querySelector(`[id^='live_info_']`);
+            if (!liveInfoContainer || liveInfoContainer.style.display === 'none' || !card.closest('#live')) {
+                scheduledInfoContainer.style.display = "block";
+            }
         }
     });
 }
