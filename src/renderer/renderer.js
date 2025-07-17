@@ -197,6 +197,10 @@ window.ipcRender.receive("live:load", (newLiveVideos) => {
       activeTimers.push(timer);
       createLiveCard(video, timer);
     } else {
+      // If timer already exists, check if startTime needs to be updated.
+      if (isNaN(timer.startTime.getTime()) && video.raw.start_actual) {
+        timer.startTime = new Date(video.raw.start_actual);
+      }
        // Update existing live info (viewers, etc.)
        updateCardLiveStatus(channelId, video, timer);
     }
