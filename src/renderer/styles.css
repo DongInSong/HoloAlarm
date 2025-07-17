@@ -34,6 +34,7 @@ body {
   background-color: var(--background-color);
   color: var(--text-primary);
   user-select: none;
+  -webkit-app-region: no-drag; /* Prevent dragging on the whole body */
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-size: cover;
@@ -79,7 +80,7 @@ body {
 }
 
 .reload:hover, .settings:hover {
-  background-color: var(--holo-blue);
+  /* background-color: var(--holo-blue); */
   transform: translateY(-2px);
 }
 
@@ -281,4 +282,9 @@ footer i {
 .disabled-details > summary {
   pointer-events: none;
   opacity: 0.6;
+}
+
+#check-for-update-btn.disabled {
+  pointer-events: none;
+  opacity: 0.5;
 }

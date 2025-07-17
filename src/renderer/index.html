@@ -89,9 +89,12 @@
             Dark Mode
           </label>
         </fieldset>
-
         <footer style="margin-top: 4px;">
           <button id="save-api-key" class="contrast">Save</button>
+          <div id="version-container" style="margin-top: 1rem; font-size: 0.8rem; color: var(--pico-secondary); display: flex; justify-content: space-between; align-items: center;">
+            <span>Version: v<span id="current-version"></span></span>
+            <a href="#" id="check-for-update-btn" style="font-size: 0.75rem; text-decoration: none;">Check for Updates <i class="fas fa-sync-alt"></i></a>
+          </div>
         </footer>
       </article>
     </dialog>

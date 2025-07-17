@@ -1,64 +1,130 @@
-const { dialog } = require("electron");
+const { app, dialog, ipcMain, Notification } = require("electron");
 const { autoUpdater } = require("electron-updater");
 const ProgressBar = require("electron-progressbar");
+const log = require("electron-log");
+const path = require("path");
 
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = "info";
 autoUpdater.autoDownload = false;
+autoUpdater.forceDevUpdateConfig = true;
 
-module.exports = () => {
+let mainWindow;
+let notifyUser = false; // Flag to control notifications
+
+function sendUpdateStatus(status, data) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send("update:status", { status, data });
+  }
+}
+
+module.exports = (win) => {
+  mainWindow = win;
+  log.info("Updater module initialized");
+
+  // Check for updates on startup silently
   autoUpdater.checkForUpdates();
+
+  ipcMain.on("update:check", () => {
+    log.info("User requested an update check.");
+    notifyUser = true; // Enable notifications for this check
+    autoUpdater.checkForUpdates();
+  });
 
   let progressBar;
 
-  /* 업데이트가 가능한지 확인하는 부분이다.
-업데이트가 가능한 경우 팝업이 뜨면서 업데이트를 하겠냐고 묻는다.
-Update를 클릭하면 업데이트 가능한 파일을 다운로드 받는다. */
-  autoUpdater.on("update-available", () => {
+  autoUpdater.on("checking-for-update", () => {
+    log.info("Checking for update...");
+    sendUpdateStatus("checking");
+  });
+
+  autoUpdater.on("update-not-available", (info) => {
+    log.info("Update not available.", info);
+    sendUpdateStatus("not-available", info);
+    if (notifyUser) {
+      new Notification({
+        title: "No Updates",
+        body: "You are currently on the latest version.",
+        icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
+      }).show();
+    }
+    notifyUser = false; // Reset flag
+  });
+
+  autoUpdater.on("error", (err) => {
+    log.error("Error in auto-updater. " + err);
+    sendUpdateStatus("error", err.message);
+    if (notifyUser) {
+      new Notification({
+        title: "Update Error",
+        body: "An error occurred while checking for updates. Please try again later.",
+        icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
+      }).show();
+    }
+    notifyUser = false; // Reset flag
+  });
+
+  autoUpdater.on("update-available", (info) => {
+    log.info("Update available.", info);
+    sendUpdateStatus("available", info);
     dialog
       .showMessageBox({
         type: "info",
         title: "Update Available",
-        message: "A new version is available. Do you want to update now?",
-        buttons: ["Update", "Later"],
+        message: `A new version (${info.version}) is available. Do you want to download it now?`,
+        buttons: ["Download", "Later"],
       })
       .then((result) => {
-        const buttonIndex = result.response;
-
-        if (buttonIndex === 0) autoUpdater.downloadUpdate();
+        if (result.response === 0) {
+          log.info("User chose to download. Starting download.");
+          autoUpdater.downloadUpdate();
+        } else {
+          log.info("User chose to download later.");
+          sendUpdateStatus("download-cancelled");
+        }
       });
   });
 
-  /* progress bar가 없으면 업데이트를 다운받는 동안 사용자가 그 내용을 알 수 없기 때문에
-progress bar는 꼭 만들어준다. */
-  autoUpdater.once("download-progress", (progressObj) => {
-    progressBar = new ProgressBar({
-      text: "Downloading update...",
-      detail: "Downloading...",
-    });
+  autoUpdater.on("download-progress", (progressObj) => {
+    const log_message = `Download speed: ${progressObj.bytesPerSecond} - Downloaded ${progressObj.percent}% (${progressObj.transferred}/${progressObj.total})`;
+    log.info(log_message);
+    sendUpdateStatus("downloading", progressObj);
 
-    progressBar
-      .on("completed", function () {
-        console.info(`Update completed.`);
-        progressBar.detail = "Finishing update...";
-      })
-      .on("aborted", function () {
-        console.info(`Aborting...`);
+    if (!progressBar) {
+      progressBar = new ProgressBar({
+        text: "Downloading update...",
+        detail: "Waiting for download to start...",
       });
+      progressBar.on("completed", () => {
+        log.info("ProgressBar completed");
+        progressBar.detail = "Download finished. Preparing to install...";
+      });
+      progressBar.on("aborted", (value) => log.info(`ProgressBar aborted: ${value}`));
+    }
+    progressBar.value = progressObj.percent;
+    progressBar.detail = `Downloading... ${Math.round(progressObj.percent)}%`;
   });
 
-  // 업데이트를 다운받고 나면 업데이트 설치 후 재시작을 요청하는 팝업이 뜬다.
-  autoUpdater.on("update-downloaded", () => {
-    progressBar.setCompleted();
+  autoUpdater.on("update-downloaded", (info) => {
+    log.info("Update downloaded", info);
+    sendUpdateStatus("downloaded", info);
+    if (progressBar) {
+      progressBar.setCompleted();
+    }
     dialog
       .showMessageBox({
         type: "info",
         title: "Update Ready",
-        message: "Update downloaded. Do you want to restart now?",
+        message: "A new version has been downloaded. Restart the application to apply the updates.",
         buttons: ["Restart", "Later"],
       })
       .then((result) => {
-        const buttonIndex = result.response;
-
-        if (buttonIndex === 0) autoUpdater.quitAndInstall(false, true);
+        if (result.response === 0) {
+          log.info("User chose to restart.");
+          autoUpdater.quitAndInstall(false, true);
+        } else {
+          log.info("User chose to restart later.");
+        }
       });
   });
 };

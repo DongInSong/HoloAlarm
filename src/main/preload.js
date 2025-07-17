@@ -6,9 +6,9 @@ const ipcRenderer = require("electron").ipcRenderer;
 const ipc = {
   render: {
     // From render to main.
-    send: ["setting:save", "notification:send", "live_url:send", "channel_url:send", "reload"],
+    send: ["setting:save", "notification:send", "live_url:send", "channel_url:send", "reload", "update:check"],
     // From main to render.
-    receive: ["setting:load", "onair:load", "live:load", "channel:load", "scheduled:load", "api:error"],
+    receive: ["setting:load", "onair:load", "live:load", "channel:load", "scheduled:load", "api:error", "update:status"],
     // From render to main and back again.
     sendReceive: [],
   },

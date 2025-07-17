@@ -14,8 +14,18 @@ const themeSwitch = document.getElementById('theme-switch');
 const closeActionSelect = document.getElementById('close-action-select');
 const notifyOnTraySwitch = document.getElementById('notify-on-tray-switch');
 const liveNotificationSelect = document.getElementById('live-notification-select');
+const currentVersionSpan = document.getElementById('current-version');
+const checkForUpdateBtn = document.getElementById('check-for-update-btn');
+// const updateStatusP = document.getElementById('update-status'); // No longer needed
 
 // --- Event Listeners ---
+checkForUpdateBtn.addEventListener('click', (event) => {
+  event.preventDefault(); // Prevent default link behavior
+  if (checkForUpdateBtn.classList.contains('disabled')) return;
+  // updateStatusP.innerText = ''; // No longer needed
+  window.ipcRender.send('update:check');
+});
+
 settingsBtn.addEventListener('click', () => {
   settingsModal.showModal();
 });
@@ -89,6 +99,26 @@ window.ipcRender.receive("setting:load", (data) => {
   liveNotificationSelect.value = liveNotifications;
 
   favorites = data.favorites || [];
+});
+
+window.ipcRender.receive('update:status', ({ status, data }) => {
+  console.log('Update status received:', status, data);
+  const updateIcon = checkForUpdateBtn.querySelector('i');
+  
+  // Always re-enable the button unless checking is in progress
+  checkForUpdateBtn.classList.remove('disabled');
+  updateIcon.classList.remove('fa-spin');
+
+  switch (status) {
+    case 'checking':
+      checkForUpdateBtn.classList.add('disabled');
+      updateIcon.classList.add('fa-spin');
+      break;
+    case 'current-version':
+      currentVersionSpan.innerText = data;
+      break;
+    // Other statuses are now handled by main process notifications
+  }
 });
 
 window.ipcRender.receive("channel:load", (data) => {
@@ -383,11 +413,17 @@ function createLiveDiv(video, timer) {
 function updateAllTimers() {
   activeTimers.forEach(timer => {
     const now = new Date();
-    const uptime = new Date(now - timer.startTime);
-    const timeString = 
-        `<i class="fas fa-signal" style="color: var(--holo-blue); margin-right: 4px;"></i><span style="color:rgba(255, 60, 60);">    ${String(uptime.getUTCHours()).padStart(2, "0")}:${String(
-          uptime.getUTCMinutes()
-        ).padStart(2, "0")}:${String(uptime.getUTCSeconds()).padStart(2, "0")}</span>`;
+    let timeString;
+
+    if (timer.startTime && !isNaN(timer.startTime.getTime())) {
+      const uptime = new Date(now - timer.startTime);
+      timeString = 
+          `<i class="fas fa-signal" style="color: var(--holo-blue); margin-right: 4px;"></i><span style="color:rgba(255, 60, 60);">    ${String(uptime.getUTCHours()).padStart(2, "0")}:${String(
+            uptime.getUTCMinutes()
+          ).padStart(2, "0")}:${String(uptime.getUTCSeconds()).padStart(2, "0")}</span>`;
+    } else {
+      timeString = `<i class="fas fa-spinner fa-spin" style="color: var(--holo-blue); margin-right: 4px;"></i><span style="color: var(--text-secondary);">Waiting...</span>`;
+    }
     
     timer.elements.forEach(element => {
         if(element) element.innerHTML = timeString;

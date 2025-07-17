@@ -11,7 +11,10 @@ const settingsManager = require("./settingsManager");
 const trayManager = require("./trayManager");
 const imageManager = require("./imageManager");
 const path = require("path");
+const log = require("electron-log");
 const updater = require("./updater");
+
+log.info("App starting...");
 
 let schedule;
 let live_period = 1000 * 60 * 1;
@@ -27,12 +30,14 @@ app.disableHardwareAcceleration();
 const packageJson = require("../../package.json");
 
 app.on("ready", async () => {
+  log.info("App is ready.");
   app.setAppUserModelId(packageJson.name);
+  // The updater call will be moved to after the window is created.
   if (!isDevelopment) {
+    log.info("Setting up launch at start.");
     launchAtStartIp();
-    updater();
   }
-  console.log(isDevelopment);
+  log.info(`isDevelopment: ${isDevelopment}`);
 });
 
 function launchAtStartIp() {
@@ -80,6 +85,13 @@ app.once("ready", (e) => {
     },
     icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
   });
+
+  // Pass the window object to the updater
+  // if (!isDevelopment) { // Allow updater in development mode for testing
+    log.info("Initializing updater.");
+    updater(window);
+  // }
+
   if (isDevelopment) {
     window.webContents.openDevTools();
   }
@@ -123,6 +135,8 @@ app.once("ready", (e) => {
 
   window.webContents.on("did-finish-load", function () {
     load_setting();
+    // Send version info
+    window.webContents.send("update:status", { status: "current-version", data: app.getVersion() });
 
     if (isDevelopment) {
       load_channels()
@@ -158,6 +172,7 @@ app.once("ready", (e) => {
   });
 
   ipcMain.on("channel_url:send", (event, content) => {
+    log.info(`Opening channel URL: ${content}`);
     event.preventDefault();
     shell.openExternal("https://www.youtube.com/channel/" + content);
   });
