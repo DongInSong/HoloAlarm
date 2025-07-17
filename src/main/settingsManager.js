@@ -26,11 +26,13 @@ function readSetting() {
   } catch {
     const defaultSetting = {
       background: "Hakos",
-      alarm: "on",
       favorites: [],
       backgroundUrl: null,
       apiKey: null,
       theme: "light",
+      liveNotifications: "favorites",
+      notifyOnTray: true,
+      closeAction: "tray",
     };
     fs.writeFileSync(settingsFilePath, JSON.stringify(defaultSetting, null, 2));
     return defaultSetting;

@@ -24,34 +24,25 @@ closeBtn.addEventListener('click', (e) => {
 });
 
 saveApiKeyBtn.addEventListener('click', () => {
-  const apiKey = apiKeyInput.value;
-  if (apiKey) {
-    const errorContainer = document.getElementById('error-container');
-    if(errorContainer) errorContainer.style.display = 'none';
-    window.ipcRender.send("setting:save", { apiKey: apiKey });
-    settingsModal.close();
-  }
+  const settingsToSave = {
+    apiKey: apiKeyInput.value,
+    theme: themeSwitch.checked ? 'dark' : 'light',
+    closeAction: closeActionSelect.value,
+    notifyOnTray: notifyOnTraySwitch.checked,
+    liveNotifications: liveNotificationSelect.value
+  };
+
+  const errorContainer = document.getElementById('error-container');
+  if(errorContainer) errorContainer.style.display = 'none';
+  
+  window.ipcRender.send("setting:save", settingsToSave);
+  settingsModal.close();
 });
+
 
 themeSwitch.addEventListener('change', () => {
   const theme = themeSwitch.checked ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', theme);
-  window.ipcRender.send("setting:save", { theme: theme });
-});
-
-closeActionSelect.addEventListener('change', () => {
-  const closeAction = closeActionSelect.value;
-  window.ipcRender.send("setting:save", { closeAction: closeAction });
-});
-
-notifyOnTraySwitch.addEventListener('change', () => {
-  const notifyOnTray = notifyOnTraySwitch.checked;
-  window.ipcRender.send("setting:save", { notifyOnTray: notifyOnTray });
-});
-
-liveNotificationSelect.addEventListener('change', () => {
-  const liveNotifications = liveNotificationSelect.value;
-  window.ipcRender.send("setting:save", { liveNotifications: liveNotifications });
 });
 
 reload.addEventListener("click", (evt) => {
