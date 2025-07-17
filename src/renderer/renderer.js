@@ -43,12 +43,11 @@ saveApiKeyBtn.addEventListener('click', () => {
     notifyOnTray: notifyOnTraySwitch.checked,
     liveNotifications: liveNotificationSelect.value
   };
-
-  const errorContainer = document.getElementById('error-container');
-  if(errorContainer) errorContainer.style.display = 'none';
   
   window.ipcRender.send("setting:save", settingsToSave);
-  settingsModal.close();
+  
+  // Force a reload to ensure a clean state, as requested.
+  location.reload();
 });
 
 
@@ -129,7 +128,7 @@ window.ipcRender.receive("channel:load", (data) => {
   allChannels = data;
   
   // Clear existing channel groups except for LIVE and Favorites
-  const detailsToRemove = mainContainer.querySelectorAll("details:not(:first-child):not(:nth-child(2))");
+  const detailsToRemove = mainContainer.querySelectorAll("details:not(#live-details):not(#favorites-details)");
   detailsToRemove.forEach(d => d.remove());
 
   const channelsByGroup = data.reduce((acc, channel) => {
@@ -148,8 +147,19 @@ window.ipcRender.receive("channel:load", (data) => {
 
 window.ipcRender.receive("api:error", (error) => {
   const mainContainer = document.getElementById("main");
-  const detailsToRemove = mainContainer.querySelectorAll("details:not(:first-child)");
-  detailsToRemove.forEach(detail => detail.remove());
+  
+  // Clear content without removing the main details elements
+  const liveContainer = document.getElementById("live");
+  if (liveContainer) liveContainer.innerHTML = "";
+
+  const favoritesContainer = document.getElementById("favorites");
+  if (favoritesContainer) favoritesContainer.innerHTML = "";
+
+  // Remove only the dynamically generated channel groups
+  if (mainContainer) {
+    const detailsToRemove = mainContainer.querySelectorAll("details:not(#live-details):not(#favorites-details)");
+    detailsToRemove.forEach(d => d.remove());
+  }
 
   const existingError = document.getElementById('api-error-message');
   if (existingError) existingError.remove();
@@ -162,7 +172,7 @@ window.ipcRender.receive("api:error", (error) => {
 
 window.ipcRender.receive("live:load", (newLiveVideos) => {
   liveVideos = newLiveVideos;
-  const liveDetails = document.querySelector('#main details:first-child');
+  const liveDetails = document.getElementById('live-details');
   const liveContainer = document.getElementById("live");
   
   const currentlyLiveIds = newLiveVideos.map(v => v.raw.channel.id);
