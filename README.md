@@ -1,5 +1,7 @@
 ﻿# HoloAlarm
-
+![License](https://img.shields.io/github/license/senli1073/senli1073.github.io)
+![Last Commit](https://img.shields.io/github/last-commit/DongInSong/mini-redis)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/DongInSong/holo-alarm/total)
 ## Overview
 
 HoloAlarm is a desktop application that provides notifications for Hololive live streams. Stay updated with your favorite VTubers and never miss a live stream again.
@@ -12,7 +14,7 @@ Here are some screenshots of the application:
 ---|---|---
 ![Live Streams](img/sample_live.png) | ![Favorites](img/sample_fav.png) | ![Dark Mode](img/sample_darkmode.png)
 
-## Usage
+## Usage (Windows)
 
 <table>
   <tr>
@@ -20,14 +22,20 @@ Here are some screenshots of the application:
 
 <ol>
   <br>
-  <li><strong>**Get API Key from Holodex:** </strong></li>
+  <li><strong>Download the Application</strong></li>
     <br>
-    <p> - Go to the [Holodex](https://holodex.net/) website and log in.</p>
-    <p> - Navigate to the **Account** > **Developer Settings** page.</p>
-    <p> - Click the **"New API Key"** button to generate a new API key.</p>
+    <p> - Visit the <a href="https://github.com/DongInSong/holo-alarm/releases" target="_blank">GitHub Releases page</a>.</p>
+    <p> - Download the latest `.exe` file from the assets section.</p>
+    <p> - <strong>⚠️Note:</strong> Since the application is not code-signed, Windows SmartScreen may show a warning when running the file. You can verify the source code and releases on GitHub before running the application.</p>
+  <br>
+  <li><strong>Get API Key from Holodex</strong></li>
+    <br>
+    <p> - Go to the <a href="https://holodex.net/" target="_blank">Holodex</a> website and log in.</p>
+    <p> - Navigate to the `Account` > `Developer Settings` page.</p>
+    <p> - Click the "New API Key" button to generate a new API key.</p>
     <p> - Copy the generated API key.</p>
     <br>
-  <li><strong>**Run the Application and Set API Key:**</strong></li>
+  <li><strong>Run the Application and Set API Key</strong></li>
     <br>
     <p> - When you first run the application, you will be prompted to enter the Holodex API key.</p>
     <p> - Paste the copied API key into the input field and save.</p>
@@ -35,7 +43,7 @@ Here are some screenshots of the application:
 
 </td>
     <td>
-      <img src="img/sample_api.png" alt="api" width="250">
+      <img src="img/sample_api.png" alt="api" width="700">
     </td>
   </tr>
 </table>
