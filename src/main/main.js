@@ -11,7 +11,7 @@ const settingsManager = require("./settingsManager");
 const trayManager = require("./trayManager");
 const imageManager = require("./imageManager");
 const path = require("path");
-const updater = path.join(__dirname, "updater.js");
+const updater = require("./updater");
 
 let schedule;
 let live_period = 1000 * 60 * 1;
@@ -28,7 +28,10 @@ const packageJson = require("../../package.json");
 
 app.on("ready", async () => {
   app.setAppUserModelId(packageJson.name);
-  if (!isDevelopment) launchAtStartIp();
+  if (!isDevelopment) {
+    launchAtStartIp();
+    updater();
+  }
   console.log(isDevelopment);
 });
 
@@ -75,7 +78,9 @@ app.once("ready", (e) => {
     },
     icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
   });
-  window.webContents.openDevTools();
+  if (isDevelopment) {
+    window.webContents.openDevTools();
+  }
   window.show();
 
   window.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
