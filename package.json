@@ -4,7 +4,7 @@
   "description": "A desktop app to get notifications for Hololive live streams.",
   "main": "src/main/main.js",
   "scripts": {
-    "start": "npx electron --inspect=5858 --remote-debugging-port=9223 .",
+    "start": "npx electron .",
     "electron:window": "SET ELECTRON_START_URL=http://localhost:3000 && yarn electron",
     "build": "react-scripts build",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -37,6 +37,7 @@
     "holodex.js": "^2.0.5"
   },
   "build": {
+    "productName": "HoloAlarm",
     "publish": [
       {
         "provider": "github",
@@ -53,7 +54,7 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": false,
+      "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "uninstallDisplayName": "HoloAlarm"
     },

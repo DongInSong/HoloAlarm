@@ -21,9 +21,7 @@ let live_period = 1000 * 60 * 1;
 let schedule_peried = 1000 * 60 * 2;
 let notifiedLiveStreams = new Set();
 
-process.env.NODE_ENV = process.env.NODE_ENV && process.env.NODE_ENV.trim().toLowerCase() == "production" ? "production" : "development";
-// process.env.NODE_ENV = "production";
-const isDevelopment = process.env.NODE_ENV !== "production";
+const isDevelopment = !app.isPackaged;
 
 app.disableHardwareAcceleration();
 
@@ -87,10 +85,10 @@ app.once("ready", (e) => {
   });
 
   // Pass the window object to the updater
-  // if (!isDevelopment) { // Allow updater in development mode for testing
+  if (!isDevelopment) {
     log.info("Initializing updater.");
     updater(window);
-  // }
+  }
 
   if (isDevelopment) {
     window.webContents.openDevTools();

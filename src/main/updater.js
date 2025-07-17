@@ -43,8 +43,8 @@ module.exports = (win) => {
     sendUpdateStatus("not-available", info);
     if (notifyUser) {
       new Notification({
-        title: "No Updates",
-        body: "You are currently on the latest version.",
+        title: "HoloAlarm",
+        body: "HoloAlarm is up to date.",
         icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
       }).show();
     }
@@ -56,8 +56,8 @@ module.exports = (win) => {
     sendUpdateStatus("error", err.message);
     if (notifyUser) {
       new Notification({
-        title: "Update Error",
-        body: "An error occurred while checking for updates. Please try again later.",
+        title: "HoloAlarm",
+        body: "An error occurred while checking for HoloAlarm updates. Please try again later.",
         icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
       }).show();
     }
@@ -70,8 +70,9 @@ module.exports = (win) => {
     dialog
       .showMessageBox({
         type: "info",
-        title: "Update Available",
-        message: `A new version (${info.version}) is available. Do you want to download it now?`,
+        icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
+        title: "HoloAlarm",
+        message: `A new version of HoloAlarm (${info.version}) is available. Would you like to download it now?`,
         buttons: ["Download", "Later"],
       })
       .then((result) => {
@@ -92,8 +93,23 @@ module.exports = (win) => {
 
     if (!progressBar) {
       progressBar = new ProgressBar({
-        text: "Downloading update...",
-        detail: "Waiting for download to start...",
+        text: "Downloading HoloAlarm Update...",
+        detail: "Waiting for the HoloAlarm update to start...",
+        icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
+        browserWindow: {
+          parent: mainWindow,
+          modal: true,
+          resizable: false,
+          closable: false,
+          minimizable: false,
+          maximizable: false,
+          width: 500,
+          height: 170,
+          webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+          },
+        },
       });
       progressBar.on("completed", () => {
         log.info("ProgressBar completed");
@@ -114,8 +130,9 @@ module.exports = (win) => {
     dialog
       .showMessageBox({
         type: "info",
-        title: "Update Ready",
-        message: "A new version has been downloaded. Restart the application to apply the updates.",
+        icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
+        title: "HoloAlarm",
+        message: "The new version of HoloAlarm has been downloaded. Restart the application to apply the updates.",
         buttons: ["Restart", "Later"],
       })
       .then((result) => {
