@@ -3,8 +3,19 @@
 ![Last Commit](https://img.shields.io/github/last-commit/DongInSong/mini-redis)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/DongInSong/holo-alarm/total)
 ## Overview
+![Dark Mode](img/sample_full.png)
+__HoloAlarm: Your Compact Hololive Stream Companion__
 
-HoloAlarm is a desktop application that provides notifications for Hololive live streams. Stay updated with your favorite VTubers and never miss a live stream again.
+HoloAlarm is a sleek, fan-made desktop app for Hololive dedicated Hololive fans. With its vertical, edge-docking layout and card-based UI, it keeps you updated on live and upcoming streams—without cluttering your screen.
+
+__Key Features:__
+
+- __Minimalist Design:__ A slim, bar-shaped window that stays out of your way.
+- __Card-Based UI:__ Easily browse streams in a clean, organized layout.
+- __Live Notifications:__ Get instant updates so you never miss a stream.
+- __Customizable:__ Personalize your experience with features like 'Favorites' and 'Dark Mode'.
+
+⚠️ Note: Since the application is not code-signed, Windows SmartScreen may show a warning when running the file. You can verify the source code and releases on GitHub before running the application.
 
 ## Images
 
@@ -26,7 +37,6 @@ Here are some screenshots of the application:
     <br>
     <p> - Visit the <a href="https://github.com/DongInSong/holo-alarm/releases" target="_blank">GitHub Releases page</a>.</p>
     <p> - Download the latest `.exe` file from the assets section.</p>
-    <p> - <strong>⚠️Note:</strong> Since the application is not code-signed, Windows SmartScreen may show a warning when running the file. You can verify the source code and releases on GitHub before running the application.</p>
   <br>
   <li><strong>Get API Key from Holodex</strong></li>
     <br>
@@ -43,7 +53,7 @@ Here are some screenshots of the application:
 
 </td>
     <td>
-      <img src="img/sample_api.png" alt="api" width="700">
+      <img src="img/sample_api.png" alt="api" width="300">
     </td>
   </tr>
 </table>
