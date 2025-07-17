@@ -161,6 +161,18 @@ window.ipcRender.receive("api:error", (error) => {
     detailsToRemove.forEach(d => d.remove());
   }
 
+  // Close and disable Live and Favorites sections
+  const liveDetails = document.getElementById('live-details');
+  if (liveDetails) {
+    liveDetails.removeAttribute('open');
+    liveDetails.classList.add('disabled-details');
+  }
+  const favoritesDetails = document.getElementById('favorites-details');
+  if (favoritesDetails) {
+    favoritesDetails.removeAttribute('open');
+    favoritesDetails.classList.add('disabled-details');
+  }
+
   const existingError = document.getElementById('api-error-message');
   if (existingError) existingError.remove();
 
