@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, Notification, Tray, Menu, nativeImage, shell, screen } = require("electron");
 
+let mainWindow;
 let isQuitting = false;
 
 // require("electron-reload")(__dirname, {
@@ -15,6 +16,21 @@ const log = require("electron-log");
 const updater = require("./updater");
 
 log.info("App starting...");
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on("second-instance", (event, commandLine, workingDirectory) => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      if (!mainWindow.isVisible()) mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
 
 process.on('uncaughtException', (err) => {
   log.error('Uncaught Exception:', err);
@@ -92,6 +108,7 @@ app.once("ready", (e) => {
     },
     icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
   });
+  mainWindow = window;
 
   // Pass the window object to the updater
   if (!isDevelopment) {
