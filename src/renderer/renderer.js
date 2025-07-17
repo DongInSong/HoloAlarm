@@ -45,9 +45,7 @@ saveApiKeyBtn.addEventListener('click', () => {
   };
   
   window.ipcRender.send("setting:save", settingsToSave);
-  
-  // Force a reload to ensure a clean state, as requested.
-  location.reload();
+  settingsModal.close();
 });
 
 
@@ -68,14 +66,22 @@ reload.addEventListener("click", (evt) => {
 });
 
 window.onscroll = function () {
+  const icon = reload.querySelector('i');
   if (document.documentElement.scrollTop || document.body.scrollTop > 0) {
-    reload.innerText = "▲";
     reload.states = "scrollUp";
+    if (icon) {
+      icon.classList.remove('fa-compress-arrows-alt');
+      icon.classList.add('fa-arrow-up');
+    }
   } else {
-    reload.innerText = "↻";
     reload.states = "reload";
+    if (icon) {
+      icon.classList.remove('fa-arrow-up');
+      icon.classList.add('fa-compress-arrows-alt');
+    }
   }
 };
+
 
 // --- IPC Renderers ---
 window.ipcRender.receive("setting:load", (data) => {
@@ -144,6 +150,7 @@ window.ipcRender.receive("channel:load", (data) => {
   }
   updateFavoritesSection();
 });
+
 
 window.ipcRender.receive("api:error", (error) => {
   const mainContainer = document.getElementById("main");

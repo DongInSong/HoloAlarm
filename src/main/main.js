@@ -180,15 +180,16 @@ app.once("ready", (e) => {
   // });
 
   ipcMain.on("setting:save", (event, content) => {
+    const oldSettings = settingsManager.readSetting();
     settingsManager.saveSetting(content);
-    if (content.apiKey) {
+
+    // If the API key was changed, reload the window from the main process.
+    if ("apiKey" in content && content.apiKey !== oldSettings.apiKey) {
       holodexService.initClient();
-      // After updating the key, refresh the data.
-      load_channels()
-        .then(() => load_lives())
-        .then(() => load_schedule());
+      BrowserWindow.fromWebContents(event.sender).reload();
     }
   });
+
 
   function start_update_lives() {
     lives = setInterval(() => {
@@ -278,6 +279,9 @@ app.once("ready", (e) => {
 });
 
 app.on("before-quit", (e) => {
+  console.log("Clearing all intervals before quitting.");
+  clearInterval(lives);
+  clearInterval(schedule);
   isQuitting = true;
 });
 
