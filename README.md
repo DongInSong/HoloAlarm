@@ -1,5 +1,7 @@
 ﻿# HoloAlarm
-
+![License](https://img.shields.io/github/license/senli1073/senli1073.github.io)
+![Last Commit](https://img.shields.io/github/last-commit/DongInSong/mini-redis)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/DongInSong/holo-alarm/total)
 ## Overview
 
 HoloAlarm is a desktop application that provides notifications for Hololive live streams. Stay updated with your favorite VTubers and never miss a live stream again.
