@@ -16,7 +16,16 @@ const updater = require("./updater");
 
 log.info("App starting...");
 
+process.on('uncaughtException', (err) => {
+  log.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, p) => {
+  log.error('Unhandled Rejection at:', p, 'reason:', reason);
+});
+
 let schedule;
+let lives;
 let live_period = 1000 * 60 * 1;
 let schedule_peried = 1000 * 60 * 2;
 let notifiedLiveStreams = new Set();

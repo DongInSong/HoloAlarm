@@ -4,3 +4,4 @@ build
 config.json
 dist
 example
+dev-app-update.yml
