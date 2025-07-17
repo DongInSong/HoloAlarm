@@ -90,3 +90,7 @@ The release files will be located in the `dist/` directory.
 This application is powered by the [Holodex API](https://holodex.net/).
 
 In compliance with the Holodex API license, this project acknowledges Holodex as the data source and provides a link to their service. The source code includes notices referring to the Holodex Public License and its disclaimer of warranties. We are committed to adhering to their terms of service.
+
+### Hololive Production
+
+This is a fan-made application and is not affiliated with Hololive Production or COVER Corporation. All icons, talent names, and other related assets are the property of COVER Corporation. This application is created in accordance with COVER Corporation's derivative works guidelines.
