@@ -89,13 +89,6 @@ window.ipcRender.receive("setting:load", (data) => {
   liveNotificationSelect.value = liveNotifications;
 
   favorites = data.favorites || [];
-  if (data.backgroundUrl) {
-    changeBackground(data.backgroundUrl);
-  } else if (data.background) {
-    const localImagePath = `../img/background/${data.background}.png`;
-    changeBackground(localImagePath);
-  }
-  changeTheme(data.background);
 });
 
 window.ipcRender.receive("channel:load", (data) => {
@@ -193,6 +186,7 @@ window.ipcRender.receive("live:load", (newLiveVideos) => {
   } else {
     liveDetails.classList.remove('disabled-details');
   }
+  updateLiveFavorites();
 });
 
 window.ipcRender.receive("scheduled:load", (newScheduledVideos) => {
@@ -253,8 +247,7 @@ function createBaseCard(channel) {
 
     photo.addEventListener("click", () => {
         if (article.dataset.bannerUrl) {
-            changeBackground(article.dataset.bannerUrl);
-            window.ipcRender.send("setting:save", { backgroundUrl: article.dataset.bannerUrl });
+            // This functionality is deprecated.
         }
     });
 
@@ -308,6 +301,16 @@ function createLiveCard(video, timer) {
     if (originalArticle) {
         const clone = originalArticle.cloneNode(true);
         clone.id = `live_section_card_${channelId}`;
+
+        // Add event listener to the favorite button on the clone
+        const favoriteBtn = clone.querySelector('.favorite-btn');
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(channelId);
+            });
+        }
+
         const infoContainer = clone.querySelector('.info-container');
         
         // Remove placeholder footers
@@ -408,7 +411,7 @@ function toggleFavorite(channelId) {
 }
 
 function updateFavoriteStar(channelId) {
-  document.querySelectorAll(`#profile_article_${channelId} .favorite-btn, #favorites #profile_article_${channelId} .favorite-btn`).forEach(starIcon => {
+  document.querySelectorAll(`#profile_article_${channelId} .favorite-btn, #favorites #profile_article_${channelId} .favorite-btn, #live #live_section_card_${channelId} .favorite-btn`).forEach(starIcon => {
     starIcon.classList.toggle("fas", favorites.includes(channelId));
     starIcon.classList.toggle("far", !favorites.includes(channelId));
   });
@@ -432,8 +435,7 @@ function updateFavoritesSection() {
       clone.querySelector('.eng_name')?.addEventListener('click', () => window.ipcRender.send("channel_url:send", channelId));
       clone.querySelector('.photo')?.addEventListener('click', () => {
         if (clone.dataset.bannerUrl) {
-            changeBackground(clone.dataset.bannerUrl);
-            window.ipcRender.send("setting:save", { backgroundUrl: clone.dataset.bannerUrl });
+            // This functionality is deprecated.
         }
       });
 
@@ -566,12 +568,4 @@ function topic(value) {
     }
   }
   return topicDiv;
-}
-
-function changeBackground(imageUrl) {
-  document.getElementById("body").style.backgroundImage = `url('${imageUrl}')`;
-}
-
-function changeTheme(target) {
-  if(target) document.getElementById("body").setAttribute("theme", target);
 }

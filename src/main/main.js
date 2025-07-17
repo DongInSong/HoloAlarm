@@ -9,6 +9,7 @@ let isQuitting = false;
 const holodexService = require("./holodexService");
 const settingsManager = require("./settingsManager");
 const trayManager = require("./trayManager");
+const imageManager = require("./imageManager");
 const path = require("path");
 const updater = path.join(__dirname, "updater.js");
 
@@ -74,7 +75,7 @@ app.once("ready", (e) => {
     },
     icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
   });
-  // window.webContents.openDevTools();
+  window.webContents.openDevTools();
   window.show();
 
   window.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
@@ -200,35 +201,39 @@ app.once("ready", (e) => {
     window.webContents.send("api:error", { message: errorMessage });
   }
 
-  async function load_lives() {
-    try {
-      const lives = await holodexService.getLiveVideo("Hololive");
-      window.webContents.send("live:load", lives);
+  function load_lives() {
+    return holodexService.getLiveVideo("Hololive")
+      .then(lives => {
+        window.webContents.send("live:load", lives);
 
-      const settings = settingsManager.readSetting();
-      if (settings.liveNotifications === "none") {
-        return;
-      }
-
-      lives.forEach((live) => {
-        if (!notifiedLiveStreams.has(live.id)) {
-          const isFavorite = settings.favorites.includes(live.channel.id);
-          if (settings.liveNotifications === "all" || (settings.liveNotifications === "favorites" && isFavorite)) {
-            new Notification({
-              title: `${live.channel.name} is live!`,
-              body: live.title,
-              icon: live.channel.photo,
-            }).on('click', () => {
-              shell.openExternal(`https://www.youtube.com/watch?v=${live.id}`);
-            }).show();
-            notifiedLiveStreams.add(live.id);
-          }
+        const settings = settingsManager.readSetting();
+        if (settings.liveNotifications === "none") {
+          return;
         }
-      });
 
-    } catch (error) {
-      handleApiError(error, "live streams");
-    }
+        lives.forEach((live) => {
+          if (live.raw && live.raw.channel && !notifiedLiveStreams.has(live.id)) {
+            const isFavorite = settings.favorites.includes(live.raw.channel.id);
+            if (settings.liveNotifications === "all" || (settings.liveNotifications === "favorites" && isFavorite)) {
+              
+              imageManager.downloadAndCacheImage(live.raw.channel.photo, live.raw.channel.id, (iconPath) => {
+                const icon = iconPath || path.join(__dirname, "..", "..", "img", "icon.ico");
+                new Notification({
+                  title: `${live.raw.channel.name} is live!`,
+                  body: live.title,
+                  icon: icon,
+                }).on('click', () => {
+                  shell.openExternal(`https://www.youtube.com/watch?v=${live.raw.id}`);
+                }).show();
+                notifiedLiveStreams.add(live.id);
+              });
+            }
+          }
+        });
+      })
+      .catch(error => {
+        handleApiError(error, "live streams");
+      });
   }
 
   async function load_channels() {

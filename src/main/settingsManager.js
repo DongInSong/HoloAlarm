@@ -25,9 +25,7 @@ function readSetting() {
     return settings;
   } catch {
     const defaultSetting = {
-      background: "Hakos",
       favorites: [],
-      backgroundUrl: null,
       apiKey: null,
       theme: "light",
       liveNotifications: "favorites",
