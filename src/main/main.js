@@ -73,7 +73,9 @@ app.once("ready", (e) => {
     minimizable: false,
     resizable: true,
     webPreferences: {
-      nodeIntegration: true,
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
       preload: path.join(__dirname, "preload.js"),
     },
     icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
@@ -207,8 +209,9 @@ app.once("ready", (e) => {
   }
 
   function load_lives() {
-    return holodexService.getLiveVideo("Hololive")
-      .then(lives => {
+    return holodexService
+      .getLiveVideo("Hololive")
+      .then((lives) => {
         window.webContents.send("live:load", lives);
 
         const settings = settingsManager.readSetting();
@@ -220,23 +223,24 @@ app.once("ready", (e) => {
           if (live.raw && live.raw.channel && !notifiedLiveStreams.has(live.id)) {
             const isFavorite = settings.favorites.includes(live.raw.channel.id);
             if (settings.liveNotifications === "all" || (settings.liveNotifications === "favorites" && isFavorite)) {
-              
               imageManager.downloadAndCacheImage(live.raw.channel.photo, live.raw.channel.id, (iconPath) => {
                 const icon = iconPath || path.join(__dirname, "..", "..", "img", "icon.ico");
                 new Notification({
                   title: `${live.raw.channel.name} is live!`,
                   body: live.title,
                   icon: icon,
-                }).on('click', () => {
-                  shell.openExternal(`https://www.youtube.com/watch?v=${live.raw.id}`);
-                }).show();
+                })
+                  .on("click", () => {
+                    shell.openExternal(`https://www.youtube.com/watch?v=${live.raw.id}`);
+                  })
+                  .show();
                 notifiedLiveStreams.add(live.id);
               });
             }
           }
         });
       })
-      .catch(error => {
+      .catch((error) => {
         handleApiError(error, "live streams");
       });
   }
