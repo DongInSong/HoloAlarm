@@ -43,7 +43,7 @@ Here are some screenshots of the application:
 
 </td>
     <td>
-      <img src="img/sample_api.png" alt="api" width="500">
+      <img src="img/sample_api.png" alt="api" width="700">
     </td>
   </tr>
 </table>
