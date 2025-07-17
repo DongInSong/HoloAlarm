@@ -4,31 +4,35 @@
     <meta charset="UTF-8" />
     <meta https-equiv="Content-Security-Policy" content="default-src *;" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link rel="stylesheet" href="../../node_modules/@picocss/pico/css/pico.min.css" />
     <link rel="stylesheet" href="./styles.css" />
     <title>HoloAlarm</title>
   </head>
   <body id="body" class="body">
-    <div id="error-container" style="display: none; padding: 1rem; background-color: var(--pico-background-color); color: var(--pico-color); text-align: center; position: sticky; top: 0; z-index: 100;"></div>
+    <div
+      id="error-container"
+      style="
+        display: none;
+        padding: 1rem;
+        background-color: var(--pico-background-color);
+        color: var(--pico-color);
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      "
+    ></div>
     <main id="main" class="container">
-      <details style="margin-top: -10px;">
-        <summary
-          role="button"
-          class="live_btn"
-          style="margin: 0"
-        >
-          ◉ LIVE!
-        </summary>
+      <details style="margin-top: -10px">
+        <summary role="button" class="live_btn" style="margin: 0">◉ LIVE!</summary>
         <div id="live" class="items"></div>
       </details>
       <details open>
-        <summary class="gen">
-          <i class="fas fa-star"></i> Favorites
-        </summary>
+        <summary class="gen"><i class="fas fa-star"></i> Favorites</summary>
         <div id="favorites" class="items"></div>
       </details>
     </main>
@@ -39,17 +43,54 @@
       <article>
         <header>
           <a href="#close" aria-label="Close" class="close"></a>
-          API Key Settings
+          Settings
         </header>
-        <p style="margin-bottom: 1rem;">
-          Please enter your Holodex API key. You can get your API key from <a href="https://holodex.net/login" target="_blank">holodex.net</a>.
-        </p>
-        <input type="text" id="api-key-input" placeholder="API Key">
-        <label for="theme-switch">
-          <input type="checkbox" id="theme-switch" name="theme-switch" role="switch">
-          Dark Mode
-        </label>
-        <footer>
+
+        <fieldset>
+          <legend style="font-weight: bold; font-size: 1.1rem">API</legend>
+          <p style="margin-bottom: 0.5rem">
+            Please enter your Holodex API key. You can get your API key from
+            <a href="https://holodex.net/login" target="_blank">holodex.net</a>.
+          </p>
+          <input type="text" id="api-key-input" placeholder="API Key" />
+        </fieldset>
+        <hr />
+        <fieldset>
+          <legend style="font-weight: bold; font-size: 1.1rem">Notifications</legend>
+          <label for="live-notification-select">
+            Live notifications
+            <select id="live-notification-select">
+              <option value="all">All live streams</option>
+              <option value="favorites">Favorites only</option>
+              <option value="none">Off</option>
+            </select>
+          </label>
+        </fieldset>
+        <hr />
+        <fieldset>
+          <legend style="font-weight: bold; font-size: 1.1rem">Tray</legend>
+          <label for="close-action-select">
+            Close button action
+            <select id="close-action-select" style="margin-bottom: 4px;">
+              <option value="tray">Minimize to tray</option>
+              <option value="exit">Exit application</option>
+            </select>
+          </label>
+          <label for="notify-on-tray-switch" style="margin-bottom: 16px;">
+            <input type="checkbox" id="notify-on-tray-switch" name="notify-on-tray-switch" role="switch" />
+            Notify every time on minimize
+          </label>
+        </fieldset>
+        <hr />
+        <fieldset>
+          <legend style="font-weight: bold; font-size: 1.1rem" >Appearance</legend>
+          <label for="theme-switch" style="margin-top: 4px;">
+            <input type="checkbox" id="theme-switch" name="theme-switch" role="switch" />
+            Dark Mode
+          </label>
+        </fieldset>
+
+        <footer style="margin-top: 4px;">
           <button id="save-api-key" class="contrast">Save</button>
         </footer>
       </article>

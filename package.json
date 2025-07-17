@@ -47,7 +47,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "./img/icon.jpg",
+      "icon": "img/icon.ico",
       "appId": "com.holoalarm.app"
     },
     "nsis": {

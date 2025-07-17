@@ -1,5 +1,7 @@
 const { app, BrowserWindow, ipcMain, Notification, Tray, Menu, nativeImage, shell, screen } = require("electron");
 
+let isQuitting = false;
+
 // require("electron-reload")(__dirname, {
 //   electron: require(`${__dirname}/node_modules/electron`),
 // });
@@ -12,7 +14,8 @@ const updater = path.join(__dirname, "updater.js");
 
 let schedule;
 let live_period = 1000 * 60 * 1;
-let schedule_peried = 1000 * 60 * 10;
+let schedule_peried = 1000 * 60 * 2;
+let notifiedLiveStreams = new Set();
 
 process.env.NODE_ENV = process.env.NODE_ENV && process.env.NODE_ENV.trim().toLowerCase() == "production" ? "production" : "development";
 // process.env.NODE_ENV = "production";
@@ -38,17 +41,17 @@ function launchAtStartIp() {
 app.once("ready", (e) => {
   const settings = settingsManager.readSetting();
   const display = screen.getPrimaryDisplay();
-  
+
   let windowBounds = settings.windowBounds;
   if (!windowBounds) {
     const defaultWidth = 400;
     const defaultHeight = 700;
     const margin = 50;
-    windowBounds = { 
-      width: defaultWidth, 
-      height: defaultHeight, 
-      x: display.bounds.width - defaultWidth - margin, 
-      y: display.bounds.height - defaultHeight - margin 
+    windowBounds = {
+      width: defaultWidth,
+      height: defaultHeight,
+      x: display.bounds.width - defaultWidth - margin,
+      y: display.bounds.height - defaultHeight - margin,
     };
   }
 
@@ -69,33 +72,50 @@ app.once("ready", (e) => {
       nodeIntegration: true,
       preload: path.join(__dirname, "preload.js"),
     },
-    icon: path.join(__dirname, "..", "..", "img", "channels4_profile.jpg"),
+    icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
   });
   // window.webContents.openDevTools();
   window.show();
 
   window.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
   window.on("close", (e) => {
-    if (window.isVisible()) {
+    if (isQuitting) {
+      return;
+    }
+
+    e.preventDefault();
+    const settings = settingsManager.readSetting();
+
+    if (settings.closeAction === "exit") {
+      isQuitting = true;
+      app.quit();
+    } else {
       window.hide();
-      e.preventDefault();
+      const notifyOnTray = settings.notifyOnTray === undefined ? true : settings.notifyOnTray;
+      if (notifyOnTray) {
+        new Notification({
+          title: "HoloAlarm",
+          body: "The app continues to run in the tray.",
+          icon: path.join(__dirname, "..", "..", "img", "icon.ico"),
+        }).show();
+      }
     }
   });
 
   // Save window bounds on resize and move
-  window.on('resize', () => {
+  window.on("resize", () => {
     const bounds = window.getBounds();
     settingsManager.saveSetting({ windowBounds: bounds });
   });
 
-  window.on('move', () => {
+  window.on("move", () => {
     const bounds = window.getBounds();
     settingsManager.saveSetting({ windowBounds: bounds });
   });
 
   window.webContents.on("did-finish-load", function () {
     load_setting();
-    
+
     if (isDevelopment) {
       load_channels()
         .then(() => load_lives())
@@ -170,7 +190,7 @@ app.once("ready", (e) => {
   function handleApiError(error, context) {
     console.error(`Failed to load ${context}:`, error.message);
     let errorMessage;
-    if (error.code === 'ENOTFOUND' || error.message.includes('net::')) {
+    if (error.code === "ENOTFOUND" || error.message.includes("net::")) {
       errorMessage = `Failed to connect to Holodex. Please check your internet connection.`;
     } else if (error.response && error.response.status === 403) {
       errorMessage = "Invalid API Key. Please check your settings.";
@@ -184,8 +204,30 @@ app.once("ready", (e) => {
     try {
       const lives = await holodexService.getLiveVideo("Hololive");
       window.webContents.send("live:load", lives);
+
+      const settings = settingsManager.readSetting();
+      if (settings.liveNotifications === "none") {
+        return;
+      }
+
+      lives.forEach((live) => {
+        if (!notifiedLiveStreams.has(live.id)) {
+          const isFavorite = settings.favorites.includes(live.channel.id);
+          if (settings.liveNotifications === "all" || (settings.liveNotifications === "favorites" && isFavorite)) {
+            new Notification({
+              title: `${live.channel.name} is live!`,
+              body: live.title,
+              icon: live.channel.photo,
+            }).on('click', () => {
+              shell.openExternal(`https://www.youtube.com/watch?v=${live.id}`);
+            }).show();
+            notifiedLiveStreams.add(live.id);
+          }
+        }
+      });
+
     } catch (error) {
-      handleApiError(error, 'live streams');
+      handleApiError(error, "live streams");
     }
   }
 
@@ -194,7 +236,7 @@ app.once("ready", (e) => {
       const channels = await holodexService.getChannels("Hololive");
       window.webContents.send("channel:load", channels);
     } catch (error) {
-      handleApiError(error, 'channels');
+      handleApiError(error, "channels");
     }
   }
 
@@ -203,14 +245,13 @@ app.once("ready", (e) => {
       const schedules = await holodexService.getScheduledVideo("Hololive");
       window.webContents.send("scheduled:load", schedules);
     } catch (error) {
-      handleApiError(error, 'schedules');
+      handleApiError(error, "schedules");
     }
   }
 });
 
 app.on("before-quit", (e) => {
-  window.removeAllListeners("close");
-  window = null;
+  isQuitting = true;
 });
 
 // function showNotification(data) {

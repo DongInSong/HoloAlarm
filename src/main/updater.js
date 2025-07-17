@@ -16,9 +16,9 @@ Update를 클릭하면 업데이트 가능한 파일을 다운로드 받는다. 
     dialog
       .showMessageBox({
         type: "info",
-        title: "업데이트 확인",
-        message: "최신 버전이 등록되었습니다.",
-        buttons: ["업데이트", "나중에"],
+        title: "Update Available",
+        message: "A new version is available. Do you want to update now?",
+        buttons: ["Update", "Later"],
       })
       .then((result) => {
         const buttonIndex = result.response;
@@ -31,17 +31,17 @@ Update를 클릭하면 업데이트 가능한 파일을 다운로드 받는다. 
 progress bar는 꼭 만들어준다. */
   autoUpdater.once("download-progress", (progressObj) => {
     progressBar = new ProgressBar({
-      text: "업데이트 중...",
-      detail: "업데이트 중...",
+      text: "Downloading update...",
+      detail: "Downloading...",
     });
 
     progressBar
       .on("completed", function () {
-        console.info(`업데이트가 완료되었습니다.`);
-        progressBar.detail = "업데이트 종료 중...";
+        console.info(`Update completed.`);
+        progressBar.detail = "Finishing update...";
       })
       .on("aborted", function () {
-        console.info(`취소 중...`);
+        console.info(`Aborting...`);
       });
   });
 
@@ -51,9 +51,9 @@ progress bar는 꼭 만들어준다. */
     dialog
       .showMessageBox({
         type: "info",
-        title: "업데이트 확인",
-        message: "재시작하시겠습니까?",
-        buttons: ["재시작", "나중에"],
+        title: "Update Ready",
+        message: "Update downloaded. Do you want to restart now?",
+        buttons: ["Restart", "Later"],
       })
       .then((result) => {
         const buttonIndex = result.response;

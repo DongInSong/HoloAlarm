@@ -9,6 +9,9 @@ const closeBtn = settingsModal.querySelector('.close');
 const apiKeyInput = document.getElementById('api-key-input');
 const saveApiKeyBtn = document.getElementById('save-api-key');
 const themeSwitch = document.getElementById('theme-switch');
+const closeActionSelect = document.getElementById('close-action-select');
+const notifyOnTraySwitch = document.getElementById('notify-on-tray-switch');
+const liveNotificationSelect = document.getElementById('live-notification-select');
 
 // --- Event Listeners ---
 settingsBtn.addEventListener('click', () => {
@@ -34,6 +37,21 @@ themeSwitch.addEventListener('change', () => {
   const theme = themeSwitch.checked ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', theme);
   window.ipcRender.send("setting:save", { theme: theme });
+});
+
+closeActionSelect.addEventListener('change', () => {
+  const closeAction = closeActionSelect.value;
+  window.ipcRender.send("setting:save", { closeAction: closeAction });
+});
+
+notifyOnTraySwitch.addEventListener('change', () => {
+  const notifyOnTray = notifyOnTraySwitch.checked;
+  window.ipcRender.send("setting:save", { notifyOnTray: notifyOnTray });
+});
+
+liveNotificationSelect.addEventListener('change', () => {
+  const liveNotifications = liveNotificationSelect.value;
+  window.ipcRender.send("setting:save", { liveNotifications: liveNotifications });
 });
 
 reload.addEventListener("click", (evt) => {
@@ -67,6 +85,15 @@ window.ipcRender.receive("setting:load", (data) => {
   const currentTheme = data.theme || 'light';
   document.documentElement.setAttribute('data-theme', currentTheme);
   themeSwitch.checked = currentTheme === 'dark';
+
+  const closeAction = data.closeAction || 'tray';
+  closeActionSelect.value = closeAction;
+
+  const notifyOnTray = data.notifyOnTray === undefined ? true : data.notifyOnTray;
+  notifyOnTraySwitch.checked = notifyOnTray;
+
+  const liveNotifications = data.liveNotifications || 'all';
+  liveNotificationSelect.value = liveNotifications;
 
   favorites = data.favorites || [];
   if (data.backgroundUrl) {
@@ -122,22 +149,23 @@ window.ipcRender.receive("live:load", (liveVideos) => {
   const liveContainer = document.getElementById("live");
   
   const currentlyLiveIds = liveVideos.map(v => v.raw.channel.id);
-  
-  // Remove ended streams
-  activeTimers = activeTimers.filter(timer => {
-    if (!currentlyLiveIds.includes(timer.channelId)) {
-      const articleToRemove = document.getElementById(`live_section_card_${timer.channelId}`);
-      if (articleToRemove) liveContainer.removeChild(articleToRemove);
-      
-      const liveInfo = document.getElementById(`live_info_${timer.channelId}`);
-      if (liveInfo) {
-        liveInfo.style.display = "none";
-        liveInfo.innerHTML = "";
-      }
-      return false;
+  const previousLiveIds = activeTimers.map(t => t.channelId);
+
+  // Identify streams that have ended
+  const endedStreamIds = previousLiveIds.filter(id => !currentlyLiveIds.includes(id));
+  endedStreamIds.forEach(channelId => {
+    const articleToRemove = document.getElementById(`live_section_card_${channelId}`);
+    if (articleToRemove) liveContainer.removeChild(articleToRemove);
+    
+    const liveInfo = document.getElementById(`live_info_${channelId}`);
+    if (liveInfo) {
+      liveInfo.style.display = "none";
+      liveInfo.innerHTML = "";
     }
-    return true;
   });
+  
+  // Filter out ended timers
+  activeTimers = activeTimers.filter(timer => currentlyLiveIds.includes(timer.channelId));
 
   // Add new or update existing streams
   liveVideos.forEach(video => {
@@ -161,7 +189,7 @@ window.ipcRender.receive("live:load", (liveVideos) => {
     if (liveInfoContainer) {
         const viewer = liveInfoContainer.querySelector('.viewer-count');
         if (viewer && video.raw.topic_id !== "membersonly") {
-            viewer.innerHTML = `<i class="fas fa-eye"></i> ${video.raw.live_viewers.toLocaleString("en-US")} watching`;
+            viewer.innerHTML = `<i class="fas fa-eye"></i> ${video.raw.live_viewers.toLocaleString("en-US")} watching     `;
         }
     }
   });
@@ -183,13 +211,21 @@ window.ipcRender.receive("live:load", (liveVideos) => {
 });
 
 window.ipcRender.receive("scheduled:load", (scheduledVideos) => {
-  document.querySelectorAll("[id^='scheduled_info_']").forEach(info => {
+  const scheduledContainers = document.querySelectorAll("[id^='scheduled_info_']");
+  scheduledContainers.forEach(info => {
     info.innerHTML = "";
     info.style.display = "none";
   });
 
+  const liveChannelIds = activeTimers.map(t => t.channelId);
+
   scheduledVideos.forEach(video => {
     const channelId = video.raw.channel.id;
+    // Do not show schedule if the channel is already live
+    if (liveChannelIds.includes(channelId)) {
+      return;
+    }
+    
     const scheduledInfoContainer = document.getElementById(`scheduled_info_${channelId}`);
     if (scheduledInfoContainer) {
       createScheduleCard(video, scheduledInfoContainer);
@@ -232,6 +268,12 @@ function createBaseCard(channel) {
     photo.src = channel.raw.photo;
     photo.draggable = false;
     photo.style.cursor = "pointer";
+    
+    photo.onerror = () => {
+      // If image fails to load, remove the entire card
+      article.remove();
+    };
+
     photo.addEventListener("click", () => {
         if (article.dataset.bannerUrl) {
             changeBackground(article.dataset.bannerUrl);
@@ -309,7 +351,7 @@ function createLiveCard(video, timer) {
         const viewer = document.createElement("small");
         viewer.className = "viewer-count";
         if (video.raw.topic_id !== "membersonly") {
-            viewer.innerHTML = `<i class="fas fa-eye"></i> ${video.raw.live_viewers.toLocaleString("en-US")} watching`;
+            viewer.innerHTML = `<i class="fas fa-eye" style="color: var(--holo-blue);"></i>   ${video.raw.live_viewers.toLocaleString("en-US")} watching     `;
         }
         
         const topicDiv = topic(video.raw.topic_id);
@@ -330,6 +372,7 @@ function createLiveCard(video, timer) {
             mainLiveInfo.innerHTML = liveDiv.innerHTML;
             mainLiveInfo.style.display = "block";
             timer.liveDiv = mainLiveInfo.querySelector('.uptime-timer');
+            mainLiveInfo.addEventListener("click", () => window.ipcRender.send("live_url:send", video.raw.id));
         }
     }
 }
@@ -361,7 +404,7 @@ function updateAllTimers() {
     const now = new Date();
     const uptime = new Date(now - timer.startTime);
     const timeString = 
-        `<i class="fas fa-signal"></i> <span style="color:rgba(255, 60, 60);">${String(uptime.getUTCHours()).padStart(2, "0")}:${String(
+        `<i class="fas fa-signal" style="color: var(--holo-blue); margin-right: 4px;"></i><span style="color:rgba(255, 60, 60);">    ${String(uptime.getUTCHours()).padStart(2, "0")}:${String(
           uptime.getUTCMinutes()
         ).padStart(2, "0")}:${String(uptime.getUTCSeconds()).padStart(2, "0")}</span>`;
     
@@ -450,7 +493,7 @@ function scheduletime(value) {
   const scheduledDiv = document.createElement("div");
   const scheduled = new Date(value);
   scheduledDiv.innerHTML =
-    `<i class="far fa-calendar-alt"></i> <small><b>${String(scheduled.getFullYear()).substr(-2)}.${String(scheduled.getMonth() + 1)}.${String(scheduled.getDate())} ${String(scheduled.getHours()).padStart(2, "0")}:${String(scheduled.getMinutes()).padStart(2, "0")}</b></small>`;
+    `<i class="far fa-calendar-alt" style="margin-right: 4px;"></i><small><b>${String(scheduled.getFullYear()).substr(-2)}.${String(scheduled.getMonth() + 1)}.${String(scheduled.getDate())} ${String(scheduled.getHours()).padStart(2, "0")}:${String(scheduled.getMinutes()).padStart(2, "0")}</b></small>`;
   return scheduledDiv;
 }
 

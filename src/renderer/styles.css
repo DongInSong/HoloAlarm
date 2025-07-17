@@ -223,7 +223,7 @@ footer {
 }
 
 footer small, footer span {
-  display: block;
+  /* display: block; */ /* This was causing the line break */
   margin-top: 0.25rem;
 }
 
