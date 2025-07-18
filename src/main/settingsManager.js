@@ -22,6 +22,8 @@ function readSetting() {
     const settings = JSON.parse(fs.readFileSync(settingsFilePath, "utf8"));
     if (!settings.favorites) settings.favorites = [];
     if (!settings.apiKey) settings.apiKey = null;
+    if (settings.launchAtStartup === undefined) settings.launchAtStartup = false;
+    if (settings.startInTray === undefined) settings.startInTray = true;
     return settings;
   } catch {
     const defaultSetting = {
@@ -31,6 +33,8 @@ function readSetting() {
       liveNotifications: "favorites",
       notifyOnTray: true,
       closeAction: "tray",
+      launchAtStartup: false,
+      startInTray: true,
     };
     fs.writeFileSync(settingsFilePath, JSON.stringify(defaultSetting, null, 2));
     return defaultSetting;

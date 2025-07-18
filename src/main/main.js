@@ -58,16 +58,23 @@ app.on("ready", async () => {
   // The updater call will be moved to after the window is created.
   if (!isDevelopment) {
     log.info("Setting up launch at start.");
-    launchAtStartIp();
+    const settings = settingsManager.readSetting();
+    setLaunchAtStartup(settings.launchAtStartup);
   }
   log.info(`isDevelopment: ${isDevelopment}`);
 });
 
-function launchAtStartIp() {
-  app.setLoginItemSettings({
-    openAtLogin: true,
+function setLaunchAtStartup(enabled, startInTray) {
+  const settings = {
+    openAtLogin: enabled,
     path: app.getPath("exe"),
-  });
+  };
+  if (enabled && startInTray) {
+    settings.args = ["--hidden"];
+  } else {
+    settings.args = [];
+  }
+  app.setLoginItemSettings(settings);
 }
 
 app.once("ready", (e) => {
@@ -87,6 +94,8 @@ app.once("ready", (e) => {
     };
   }
 
+  const shouldShowWindow = !process.argv.includes('--hidden');
+
   const window = new BrowserWindow({
     width: windowBounds.width,
     height: windowBounds.height,
@@ -96,7 +105,7 @@ app.once("ready", (e) => {
     maxHeight: display.bounds.height,
     x: windowBounds.x,
     y: windowBounds.y,
-    show: false,
+    show: shouldShowWindow,
     autoHideMenuBar: true,
     minimizable: false,
     resizable: true,
@@ -119,7 +128,9 @@ app.once("ready", (e) => {
   if (isDevelopment) {
     window.webContents.openDevTools();
   }
-  window.show();
+  if (shouldShowWindow) {
+    window.show();
+  }
 
   window.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
   window.on("close", (e) => {
@@ -208,6 +219,11 @@ app.once("ready", (e) => {
   ipcMain.on("setting:save", (event, content) => {
     const oldSettings = settingsManager.readSetting();
     settingsManager.saveSetting(content);
+
+    if ("launchAtStartup" in content || "startInTray" in content) {
+      const newSettings = settingsManager.readSetting();
+      setLaunchAtStartup(newSettings.launchAtStartup, newSettings.startInTray);
+    }
 
     // If the API key was changed, reload the window from the main process.
     if ("apiKey" in content && content.apiKey !== oldSettings.apiKey) {

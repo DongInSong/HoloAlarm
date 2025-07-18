@@ -83,6 +83,24 @@
         </fieldset>
         <hr />
         <fieldset>
+          <legend style="font-weight: bold; font-size: 1.1rem">System</legend>
+          <label for="launch-at-startup-switch">
+            <input type="checkbox" id="launch-at-startup-switch" name="launch-at-startup-switch" role="switch" />
+            Launch at startup
+          </label>
+          <fieldset id="startup-options" style="margin-top: 0.5rem; padding-left: 1.5rem;">
+            <label for="start-in-tray-radio">
+              <input type="radio" id="start-in-tray-radio" name="startup-action" value="tray" checked />
+              Start in tray
+            </label>
+            <label for="show-window-radio">
+              <input type="radio" id="show-window-radio" name="startup-action" value="show" />
+              Show main window
+            </label>
+          </fieldset>
+        </fieldset>
+        <hr />
+        <fieldset>
           <legend style="font-weight: bold; font-size: 1.1rem" >Appearance</legend>
           <label for="theme-switch" style="margin-top: 4px;">
             <input type="checkbox" id="theme-switch" name="theme-switch" role="switch" />

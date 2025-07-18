@@ -13,6 +13,10 @@ const saveApiKeyBtn = document.getElementById('save-api-key');
 const themeSwitch = document.getElementById('theme-switch');
 const closeActionSelect = document.getElementById('close-action-select');
 const notifyOnTraySwitch = document.getElementById('notify-on-tray-switch');
+const launchAtStartupSwitch = document.getElementById('launch-at-startup-switch');
+const startupOptions = document.getElementById('startup-options');
+const startInTrayRadio = document.getElementById('start-in-tray-radio');
+const showWindowRadio = document.getElementById('show-window-radio');
 const liveNotificationSelect = document.getElementById('live-notification-select');
 const currentVersionSpan = document.getElementById('current-version');
 const checkForUpdateBtn = document.getElementById('check-for-update-btn');
@@ -41,7 +45,9 @@ saveApiKeyBtn.addEventListener('click', () => {
     theme: themeSwitch.checked ? 'dark' : 'light',
     closeAction: closeActionSelect.value,
     notifyOnTray: notifyOnTraySwitch.checked,
-    liveNotifications: liveNotificationSelect.value
+    liveNotifications: liveNotificationSelect.value,
+    launchAtStartup: launchAtStartupSwitch.checked,
+    startInTray: startInTrayRadio.checked
   };
   
   window.ipcRender.send("setting:save", settingsToSave);
@@ -52,6 +58,10 @@ saveApiKeyBtn.addEventListener('click', () => {
 themeSwitch.addEventListener('change', () => {
   const theme = themeSwitch.checked ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', theme);
+});
+
+launchAtStartupSwitch.addEventListener('change', () => {
+  startupOptions.disabled = !launchAtStartupSwitch.checked;
 });
 
 reload.addEventListener("click", (evt) => {
@@ -99,6 +109,14 @@ window.ipcRender.receive("setting:load", (data) => {
 
   const notifyOnTray = data.notifyOnTray === undefined ? true : data.notifyOnTray;
   notifyOnTraySwitch.checked = notifyOnTray;
+
+  const launchAtStartup = data.launchAtStartup === undefined ? false : data.launchAtStartup;
+  launchAtStartupSwitch.checked = launchAtStartup;
+  startupOptions.disabled = !launchAtStartup;
+
+  const startInTray = data.startInTray === undefined ? true : data.startInTray;
+  startInTrayRadio.checked = startInTray;
+  showWindowRadio.checked = !startInTray;
 
   const liveNotifications = data.liveNotifications || 'all';
   liveNotificationSelect.value = liveNotifications;
