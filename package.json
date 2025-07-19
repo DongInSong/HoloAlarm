@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DongInSong/holo-alarm.git"
+    "url": "git+https://github.com/DongInSong/HoloAlarm.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/DongInSong/holo-alarm/issues"
+    "url": "https://github.com/DongInSong/HoloAlarm/issues"
   },
-  "homepage": "https://github.com/DongInSong/holo-alarm#readme",
+  "homepage": "https://github.com/DongInSong/HoloAlarm#readme",
   "devDependencies": {
     "electron": "^25.1.0",
     "electron-builder": "^24.4.0"
@@ -42,7 +42,7 @@
       {
         "provider": "github",
         "owner": "DongInSong",
-        "repo": "holo-alarm"
+        "repo": "HoloAlarm"
       }
     ],
     "win": {

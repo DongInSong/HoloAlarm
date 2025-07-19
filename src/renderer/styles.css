@@ -10,6 +10,7 @@
   --card-border: #e2e8f0;      /* Light Gray Border */
   --text-primary: #1a202c;      /* Dark Gray Text */
   --text-secondary: #4a5568;   /* Medium Gray Text */
+  --live-text-color: rgba(255, 60, 60); /* Bright Red for Light Mode */
   --font-family: 'M PLUS Rounded 1c', sans-serif;
   --border-radius: 8px;
   --pico-font-family: var(--font-family); /* Override Pico default */
@@ -23,6 +24,7 @@ html[data-theme='dark'] {
   --card-border: #4a5568;      /* Gray */
   --text-primary: #edf2f7;      /* Light Gray */
   --text-secondary: #a0aec0;   /* Medium Gray */
+  --live-text-color: #ff7b7b; /* Softer Red for Dark Mode */
 }
 
 ::-webkit-scrollbar {
@@ -123,6 +125,11 @@ details[open] > summary::before {
   color: white;
   font-weight: bold;
   border: none;
+}
+
+html[data-theme='dark'] .live_btn {
+  background-color: var(--holo-blue);
+  color: var(--text-primary);
 }
 
 .gen {
@@ -263,6 +270,10 @@ footer i {
   margin-bottom: 0.25rem;
 }
 
+.uptime-timer-text {
+  color: var(--live-text-color);
+}
+
 /* 7. API Error Message
 -------------------------------------------------- */
 #api-error-message {
@@ -312,4 +323,33 @@ dialog[open] > article {
   max-height: 90vh;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* 9. Input Validation Styles
+-------------------------------------------------- */
+.input-error {
+  border-color: #e53e3e !important; /* Use !important to override other styles */
+  box-shadow: 0 0 0 1px #e53e3e !important;
+}
+
+.shake {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
 }

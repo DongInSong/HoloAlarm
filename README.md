@@ -1,7 +1,7 @@
 ﻿# <img src="img/icon.ico" alt="api" width="30"> HoloAlarm
-![License](https://img.shields.io/github/license/DongInSong/holo-alarm)
-![Last Commit](https://img.shields.io/github/last-commit/DongInSong/holo-alarm)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/DongInSong/holo-alarm/total)
+![License](https://img.shields.io/github/license/DongInSong/HoloAlarm)
+![Last Commit](https://img.shields.io/github/last-commit/DongInSong/HoloAlarm)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/DongInSong/HoloAlarm/total)
 ## Overview
 ![Dark Mode](img/sample_full.png)
 __HoloAlarm: Your Compact Hololive Stream Companion__
@@ -35,7 +35,7 @@ Here are some screenshots of the application:
   <br>
   <li><strong>Download the Application</strong></li>
     <br>
-    <p> - Visit the <a href="https://github.com/DongInSong/holo-alarm/releases" target="_blank">GitHub Releases page</a>.</p>
+<p> - Visit the <a href="https://github.com/DongInSong/HoloAlarm/releases" target="_blank">GitHub Releases page</a>.</p>
     <p> - Download the latest `.exe` file from the assets section.</p>
   <br>
   <li><strong>Get API Key from Holodex</strong></li>
@@ -62,9 +62,9 @@ Here are some screenshots of the application:
 
 The application settings are stored in `localSetting.json`. You can find this file in the following locations depending on your operating system:
 
--   **Windows:** `C:\Users\{USERNAME}\AppData\Roaming\holo-alarm\localSetting.json`
--   **Linux:** `~/.config/holo-alarm/localSetting.json`
--   **macOS:** `~/Library/Application Support/holo-alarm/localSetting.json`
+-   **Windows:** `C:\Users\{USERNAME}\AppData\Roaming\HoloAlarm\localSetting.json`
+-   **Linux:** `~/.config/HoloAlarm/localSetting.json`
+-   **macOS:** `~/Library/Application Support/HoloAlarm/localSetting.json`
 
 
 ## Build and Run
@@ -73,8 +73,8 @@ To build and run this application locally, follow these steps:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/DongInSong/holoalarm.git
-    cd holoalarm
+git clone https://github.com/DongInSong/HoloAlarm.git
+cd HoloAlarm
     ```
 
 2.  **Install dependencies:**

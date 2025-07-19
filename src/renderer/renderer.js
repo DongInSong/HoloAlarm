@@ -31,6 +31,9 @@ checkForUpdateBtn.addEventListener('click', (event) => {
 });
 
 settingsBtn.addEventListener('click', () => {
+  // Remove error styles when opening the modal
+  apiKeyInput.classList.remove('input-error');
+  apiKeyInput.classList.remove('shake');
   settingsModal.showModal();
 });
 
@@ -40,8 +43,21 @@ closeBtn.addEventListener('click', (e) => {
 });
 
 saveApiKeyBtn.addEventListener('click', () => {
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) {
+    apiKeyInput.classList.add('input-error');
+    apiKeyInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    apiKeyInput.classList.add('shake');
+    apiKeyInput.addEventListener('animationend', () => {
+      apiKeyInput.classList.remove('shake');
+    }, { once: true });
+
+    return; // Stop if API key is missing
+  }
+
   const settingsToSave = {
-    apiKey: apiKeyInput.value,
+    apiKey: apiKey,
     theme: themeSwitch.checked ? 'dark' : 'light',
     closeAction: closeActionSelect.value,
     notifyOnTray: notifyOnTraySwitch.checked,
@@ -52,6 +68,14 @@ saveApiKeyBtn.addEventListener('click', () => {
   
   window.ipcRender.send("setting:save", settingsToSave);
   settingsModal.close();
+});
+
+
+apiKeyInput.addEventListener('input', () => {
+  // Remove error style when user starts typing
+  if (apiKeyInput.value.trim()) {
+    apiKeyInput.classList.remove('input-error');
+  }
 });
 
 
@@ -95,10 +119,11 @@ window.onscroll = function () {
 
 // --- IPC Renderers ---
 window.ipcRender.receive("setting:load", (data) => {
+  apiKeyInput.value = data.apiKey || '';
   if (!data.apiKey) {
+    // Just show the modal, don't set error state yet
     settingsModal.showModal();
   }
-  apiKeyInput.value = data.apiKey || '';
   
   const currentTheme = data.theme || 'light';
   document.documentElement.setAttribute('data-theme', currentTheme);
@@ -470,7 +495,7 @@ function updateAllTimers() {
     if (timer.startTime && !isNaN(timer.startTime.getTime())) {
       const uptime = new Date(now - timer.startTime);
       timeString = 
-          `<i class="fas fa-signal" style="color: var(--holo-blue); margin-right: 4px;"></i><span style="color:rgba(255, 60, 60);">    ${String(uptime.getUTCHours()).padStart(2, "0")}:${String(
+          `<i class="fas fa-signal" style="color: var(--holo-blue); margin-right: 4px;"></i><span class="uptime-timer-text">    ${String(uptime.getUTCHours()).padStart(2, "0")}:${String(
             uptime.getUTCMinutes()
           ).padStart(2, "0")}:${String(uptime.getUTCSeconds()).padStart(2, "0")}</span>`;
     } else {
