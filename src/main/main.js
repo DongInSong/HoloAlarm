@@ -59,7 +59,7 @@ app.on("ready", async () => {
   if (!isDevelopment) {
     log.info("Setting up launch at start.");
     const settings = settingsManager.readSetting();
-    setLaunchAtStartup(settings.launchAtStartup);
+    setLaunchAtStartup(settings.launchAtStartup, settings.startInTray);
   }
   log.info(`isDevelopment: ${isDevelopment}`);
 });
