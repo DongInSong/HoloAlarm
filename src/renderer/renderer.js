@@ -3,7 +3,7 @@ let allChannels = [];
 let activeTimers = [];
 let liveVideos = [];
 let scheduledVideos = [];
-let animationFrameId;
+let timerIntervalId = null;
 
 const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
@@ -253,12 +253,13 @@ window.ipcRender.receive("live:load", (newLiveVideos) => {
     }
   });
 
-  // Manage animation frame loop
-  if (activeTimers.length > 0 && !animationFrameId) {
-    animationFrameId = requestAnimationFrame(updateAllTimers);
-  } else if (activeTimers.length === 0 && animationFrameId) {
-    cancelAnimationFrame(animationFrameId);
-    animationFrameId = null;
+  // Manage timer loop
+  if (activeTimers.length > 0 && !timerIntervalId) {
+    updateAllTimers(); // Run once immediately to avoid delay
+    timerIntervalId = setInterval(updateAllTimers, 1000);
+  } else if (activeTimers.length === 0 && timerIntervalId) {
+    clearInterval(timerIntervalId);
+    timerIntervalId = null;
   }
 
   // Disable details if empty
@@ -480,8 +481,6 @@ function updateAllTimers() {
         if(element) element.innerHTML = timeString;
     });
   });
-
-  animationFrameId = requestAnimationFrame(updateAllTimers);
 }
 
 function toggleFavorite(channelId) {
