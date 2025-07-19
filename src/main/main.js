@@ -17,6 +17,9 @@ const updater = require("./updater");
 
 log.info("App starting...");
 
+// app.commandLine.appendSwitch("high-dpi-support", "true");
+// app.commandLine.appendSwitch("force-device-scale-factor", "1");
+
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
@@ -77,32 +80,47 @@ function setLaunchAtStartup(enabled, startInTray) {
   app.setLoginItemSettings(settings);
 }
 
+function isWindowVisible(windowBounds) {
+  if (!windowBounds) return false;
+
+  return screen.getAllDisplays().some(display => {
+    const { x, y, width, height } = display.workArea;
+    return (
+      windowBounds.x >= x &&
+      windowBounds.y >= y &&
+      windowBounds.x + windowBounds.width <= x + width &&
+      windowBounds.y + windowBounds.height <= y + height
+    );
+  });
+}
+
 app.once("ready", (e) => {
   const settings = settingsManager.readSetting();
-  const display = screen.getPrimaryDisplay();
-
   let windowBounds = settings.windowBounds;
-  if (!windowBounds) {
+
+  if (!isWindowVisible(windowBounds)) {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { workArea } = primaryDisplay;
     const defaultWidth = 400;
     const defaultHeight = 700;
     const margin = 50;
     windowBounds = {
       width: defaultWidth,
       height: defaultHeight,
-      x: display.bounds.width - defaultWidth - margin,
-      y: display.bounds.height - defaultHeight - margin,
+      x: workArea.x + workArea.width - defaultWidth - margin,
+      y: workArea.y + workArea.height - defaultHeight - margin,
     };
   }
 
+  const targetDisplay = screen.getDisplayMatching(windowBounds) || screen.getPrimaryDisplay();
   const shouldShowWindow = !process.argv.includes('--hidden');
-
   const window = new BrowserWindow({
     width: windowBounds.width,
     height: windowBounds.height,
     minWidth: 350,
     maxWidth: 500,
     minHeight: 400,
-    maxHeight: display.bounds.height,
+    maxHeight: targetDisplay.workArea.height,
     x: windowBounds.x,
     y: windowBounds.y,
     show: shouldShowWindow,
@@ -137,10 +155,11 @@ app.once("ready", (e) => {
     if (isQuitting) {
       return;
     }
-
     e.preventDefault();
-    const settings = settingsManager.readSetting();
 
+    const bounds = window.getNormalBounds();
+    settingsManager.saveSetting({ windowBounds: bounds });
+    const settings = settingsManager.readSetting();
     if (settings.closeAction === "exit") {
       isQuitting = true;
       app.quit();
@@ -155,17 +174,6 @@ app.once("ready", (e) => {
         }).show();
       }
     }
-  });
-
-  // Save window bounds on resize and move
-  window.on("resize", () => {
-    const bounds = window.getBounds();
-    settingsManager.saveSetting({ windowBounds: bounds });
-  });
-
-  window.on("move", () => {
-    const bounds = window.getBounds();
-    settingsManager.saveSetting({ windowBounds: bounds });
   });
 
   window.webContents.on("did-finish-load", function () {
@@ -327,9 +335,21 @@ app.on("before-quit", (e) => {
   isQuitting = true;
 });
 
+
+
 // function showNotification(data) {
 //   noti = new Notification({
 //     title: data["name"],
+//     body: data["title"],
+//     icon: nativeImage.createFromDataURL(data["photo"]),
+//   });
+//   noti.on("click", (event) => {
+//     event.preventDefault();
+//     shell.openExternal("https://www.youtube.com/watch?v=" + data["id"]);
+//   });
+
+//   noti.show();
+// }
 //     body: data["title"],
 //     icon: nativeImage.createFromDataURL(data["photo"]),
 //   });
