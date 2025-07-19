@@ -273,8 +273,24 @@ window.ipcRender.receive("live:load", (newLiveVideos) => {
       if (isNaN(timer.startTime.getTime()) && video.raw.start_actual) {
         timer.startTime = new Date(video.raw.start_actual);
       }
-       // Update existing live info (viewers, etc.)
-       updateCardLiveStatus(channelId, video, timer);
+      // Update existing live info (viewers, etc.)
+      const liveVideo = liveVideos.find(v => v.id === video.id);
+      if (liveVideo) {
+        Object.assign(liveVideo.raw, video.raw);
+      }
+      updateCardLiveStatus(channelId, video, timer);
+      
+      // Also update the card in the LIVE section
+      const liveSectionCard = document.getElementById(`live_section_card_${channelId}`);
+      if (liveSectionCard) {
+        const liveInfoContainer = liveSectionCard.querySelector('.live-info-content');
+        if (liveInfoContainer) {
+          const viewerElement = liveInfoContainer.querySelector('.viewer-count');
+          if (viewerElement && video.raw.live_viewers) {
+            viewerElement.innerHTML = `<i class="fas fa-eye" style="color: var(--holo-blue);"></i>   ${video.raw.live_viewers.toLocaleString("en-US")} watching     `;
+          }
+        }
+      }
     }
   });
 
@@ -470,16 +486,21 @@ function createLiveDiv(video, timer) {
     
     const viewer = document.createElement("small");
     viewer.className = "viewer-count";
-    if (video.raw.topic_id !== "membersonly") {
+    if (video.raw.topic_id !== "membersonly" && video.raw.live_viewers) {
         viewer.innerHTML = `<i class="fas fa-eye" style="color: var(--holo-blue);"></i>   ${video.raw.live_viewers.toLocaleString("en-US")} watching     `;
     }
     
     const topicDiv = topic(video.raw.topic_id);
+
+    const viewerTopicContainer = document.createElement('div');
+    viewerTopicContainer.className = 'viewer-topic-container';
+    
+    viewerTopicContainer.appendChild(viewer);
+    viewerTopicContainer.appendChild(topicDiv);
     
     liveDiv.appendChild(title);
     liveDiv.appendChild(uptime);
-    liveDiv.appendChild(viewer);
-    liveDiv.appendChild(topicDiv);
+    liveDiv.appendChild(viewerTopicContainer);
     liveDiv.style.cursor = "pointer";
     liveDiv.addEventListener("click", () => window.ipcRender.send("live_url:send", video.raw.id));
     
@@ -665,18 +686,24 @@ function scheduletime(value) {
 }
 
 function topic(value) {
-  var topicDiv = document.createElement("sub");
+  const topicDiv = document.createElement("div");
+  topicDiv.className = 'topic-wrapper';
+
   if (value) {
+    let icon = "✎";
+    let text = String(value).replace(/_/g, " ");
+    let style = "";
+
     switch (value) {
       case "Birthday":
-        topicDiv.innerHTML = "<span style='color: yellow; font-weight: bold'; >🍰 " + String(value).replace(/_/g, " ") + "<br/></span>";
+        icon = "🍰";
+        style = "color: yellow; font-weight: bold;";
         break;
       case "singing":
-        topicDiv.innerHTML = "🎶 " + String(value).replace(/_/g, " ") + "<br/>";
+        icon = "🎶";
         break;
-      default:
-        topicDiv.innerHTML = "✎ " + String(value).replace(/_/g, " ") + "<br/>";
     }
+    topicDiv.innerHTML = `<span style="${style}">${icon} ${text}</span>`;
   }
   return topicDiv;
 }
