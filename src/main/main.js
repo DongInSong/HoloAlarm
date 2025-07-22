@@ -103,7 +103,7 @@ app.once("ready", (e) => {
     const { workArea } = primaryDisplay;
     const defaultWidth = 400;
     const defaultHeight = 700;
-    const margin = 50;
+    const margin = 20;
     windowBounds = {
       width: defaultWidth,
       height: defaultHeight,
@@ -157,8 +157,8 @@ app.once("ready", (e) => {
     }
     e.preventDefault();
 
-    const bounds = window.getNormalBounds();
-    settingsManager.saveSetting({ windowBounds: bounds });
+   const bounds = window.getNormalBounds();
+   settingsManager.saveSetting({ windowBounds: bounds });
     const settings = settingsManager.readSetting();
     if (settings.closeAction === "exit") {
       isQuitting = true;

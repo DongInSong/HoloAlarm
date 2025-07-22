@@ -11,7 +11,7 @@
     "production": "cross-env NODE_ENV=production electron .",
     "build:win64": "cross-env NODE_ENV=production electron-builder --win nsis:x64",
     "build:linux64": "cross-env NODE_ENV=production electron-builder --linux --x64"
-    },
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DongInSong/HoloAlarm.git"
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/DongInSong/HoloAlarm#readme",
   "devDependencies": {
-    "electron": "^25.1.0",
+    "electron": "^37.2.3",
     "electron-builder": "^24.4.0"
   },
   "dependencies": {
