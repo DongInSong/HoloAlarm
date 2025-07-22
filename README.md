@@ -17,14 +17,6 @@ __Key Features:__
 
 ⚠️ Note: Since the application is not code-signed, Windows SmartScreen may show a warning when running the file. You can verify the source code and releases on GitHub before running the application.
 
-## Images
-
-Here are some screenshots of the application:
-
-**Live Streams** | **Favorites** | **Dark Mode**   
----|---|---
-![Live Streams](img/sample_live.png) | ![Favorites](img/sample_fav.png) | ![Dark Mode](img/sample_darkmode.png)
-
 ## Usage (Windows)
 
 <table>
