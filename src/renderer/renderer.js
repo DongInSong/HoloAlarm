@@ -147,6 +147,7 @@ window.ipcRender.receive("setting:load", (data) => {
   liveNotificationSelect.value = liveNotifications;
 
   favorites = data.favorites || [];
+  setupEventListeners(); // Setup the single listener
 });
 
 window.ipcRender.receive('update:status', ({ status, data }) => {
@@ -355,6 +356,7 @@ function createBaseCard(channel) {
     article.classList.add("artile");
     const uniqueId = channel.raw.id;
     article.id = `profile_article_${uniqueId}`;
+    article.dataset.channelId = uniqueId; // Use data attribute for easier event delegation
     article.style.setProperty('--bg-image', `url(${channel.raw.photo})`);
     if (channel.raw.banner) article.dataset.bannerUrl = channel.raw.banner;
 
@@ -365,15 +367,8 @@ function createBaseCard(channel) {
     photo.style.cursor = "pointer";
     
     photo.onerror = () => {
-      // If image fails to load, remove the entire card
       article.remove();
     };
-
-    photo.addEventListener("click", () => {
-        if (article.dataset.bannerUrl) {
-            // This functionality is deprecated.
-        }
-    });
 
     const infoContainer = document.createElement("div");
     infoContainer.className = "info-container";
@@ -386,19 +381,16 @@ function createBaseCard(channel) {
     eng_name.className = "eng_name";
     eng_name.innerText = channel.raw.english_name;
     eng_name.style.cursor = "pointer";
-    eng_name.addEventListener("click", () => window.ipcRender.send("channel_url:send", channel.raw.id));
 
     const favoriteBtn = document.createElement("i");
     favoriteBtn.className = `favorite-btn ${favorites.includes(uniqueId) ? 'fas' : 'far'} fa-star`;
     favoriteBtn.style.cursor = "pointer";
     favoriteBtn.style.marginLeft = "0.5rem";
-    favoriteBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleFavorite(uniqueId);
-    });
 
     nameContainer.appendChild(eng_name);
     nameContainer.appendChild(favoriteBtn);
+
+    infoContainer.appendChild(nameContainer);
 
     const live_info = document.createElement("footer");
     live_info.id = `live_info_${uniqueId}`;
@@ -425,15 +417,8 @@ function createLiveCard(video, timer) {
     if (originalArticle) {
         const clone = originalArticle.cloneNode(true);
         clone.id = `live_section_card_${channelId}`;
-
-        // Add event listener to the favorite button on the clone
-        const favoriteBtn = clone.querySelector('.favorite-btn');
-        if (favoriteBtn) {
-            favoriteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                toggleFavorite(channelId);
-            });
-        }
+        // Ensure data attribute is copied for event delegation
+        clone.dataset.channelId = channelId;
 
         const infoContainer = clone.querySelector('.info-container');
         
@@ -468,7 +453,7 @@ function createScheduleCard(video) {
     scheduledDiv.appendChild(schedule);
     scheduledDiv.appendChild(topicDiv);
     scheduledDiv.style.cursor = "pointer";
-    scheduledDiv.addEventListener("click", () => window.ipcRender.send("live_url:send", video.raw.id));
+    // Event listener handled by delegation
     
     return scheduledDiv;
 }
@@ -503,7 +488,7 @@ function createLiveDiv(video, timer) {
     liveDiv.appendChild(uptime);
     liveDiv.appendChild(viewerTopicContainer);
     liveDiv.style.cursor = "pointer";
-    liveDiv.addEventListener("click", () => window.ipcRender.send("live_url:send", video.raw.id));
+    // Event listener handled by delegation
     
     return liveDiv;
 }
@@ -531,16 +516,59 @@ function updateAllTimers() {
 }
 
 function toggleFavorite(channelId) {
+  const favoritesContainer = document.getElementById("favorites");
+  const favoritesDetails = favoritesContainer.closest('details');
   const index = favorites.indexOf(channelId);
+
   if (index > -1) {
+    // Remove from favorites
     favorites.splice(index, 1);
+    const cardToRemove = favoritesContainer.querySelector(`#profile_article_${channelId}`);
+    if (cardToRemove) {
+      cardToRemove.remove();
+    }
   } else {
+    // Add to favorites
     favorites.push(channelId);
+    const channel = allChannels.find(c => c.raw.id === channelId);
+    if (channel) {
+      const favoriteCard = createBaseCard(channel);
+      // Manually sync live/schedule status
+      const liveVideo = liveVideos.find(v => v.raw.channel.id === channelId);
+      const timer = activeTimers.find(t => t.channelId === channelId);
+      if (liveVideo && timer) {
+        const liveInfoContainer = favoriteCard.querySelector(`[id^='live_info_']`);
+        if (liveInfoContainer) {
+            liveInfoContainer.innerHTML = "";
+            const liveDiv = createLiveDiv(liveVideo, timer);
+            liveInfoContainer.appendChild(liveDiv);
+            liveInfoContainer.style.display = "block";
+        }
+      } else {
+        const scheduledVideo = scheduledVideos.find(v => v.raw.channel.id === channelId);
+        if (scheduledVideo) {
+            const scheduleInfoContainer = favoriteCard.querySelector(`[id^='scheduled_info_']`);
+            if (scheduleInfoContainer) {
+                scheduleInfoContainer.innerHTML = "";
+                const scheduleCard = createScheduleCard(scheduledVideo);
+                scheduleInfoContainer.appendChild(scheduleCard);
+                scheduleInfoContainer.style.display = "block";
+            }
+        }
+      }
+      favoritesContainer.appendChild(favoriteCard);
+    }
   }
   
   window.ipcRender.send("setting:save", { favorites: favorites });
   updateFavoriteStar(channelId);
-  updateFavoritesSection();
+
+  if (favoritesContainer.children.length === 0) {
+    favoritesDetails.classList.add('disabled-details');
+    favoritesDetails.open = false;
+  } else {
+    favoritesDetails.classList.remove('disabled-details');
+  }
 }
 
 function updateFavoriteStar(channelId) {
@@ -556,48 +584,36 @@ function updateFavoritesSection() {
   if (!favoritesContainer) return;
   favoritesContainer.innerHTML = "";
 
-  favorites.forEach(channelId => {
-    const originalArticle = document.getElementById(`profile_article_${channelId}`);
-    if (originalArticle) {
-      const clone = originalArticle.cloneNode(true);
-      
-      clone.querySelector('.favorite-btn')?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleFavorite(channelId);
-      });
-      clone.querySelector('.eng_name')?.addEventListener('click', () => window.ipcRender.send("channel_url:send", channelId));
-      clone.querySelector('.photo')?.addEventListener('click', () => {
-        if (clone.dataset.bannerUrl) {
-            // This functionality is deprecated.
-        }
-      });
+  const favoriteChannels = allChannels.filter(c => favorites.includes(c.raw.id))
+    .sort((a, b) => favorites.indexOf(a.raw.id) - favorites.indexOf(b.raw.id));
 
-      // Manually sync live/schedule status on clone creation
-      const liveVideo = liveVideos.find(v => v.raw.channel.id === channelId);
-      const timer = activeTimers.find(t => t.channelId === channelId);
-      if (liveVideo && timer) {
-        const liveInfoContainer = clone.querySelector(`[id^='live_info_']`);
-        if (liveInfoContainer) {
-            liveInfoContainer.innerHTML = "";
-            const liveDiv = createLiveDiv(liveVideo, timer);
-            liveInfoContainer.appendChild(liveDiv);
-            liveInfoContainer.style.display = "block";
-        }
-      } else {
-        const scheduledVideo = scheduledVideos.find(v => v.raw.channel.id === channelId);
-        if (scheduledVideo) {
-            const scheduleInfoContainer = clone.querySelector(`[id^='scheduled_info_']`);
-            if (scheduleInfoContainer) {
-                scheduleInfoContainer.innerHTML = "";
-                const scheduleCard = createScheduleCard(scheduledVideo);
-                scheduleInfoContainer.appendChild(scheduleCard);
-                scheduleInfoContainer.style.display = "block";
-            }
-        }
+  favoriteChannels.forEach(channel => {
+    const favoriteCard = createBaseCard(channel);
+
+    // Manually sync live/schedule status
+    const liveVideo = liveVideos.find(v => v.raw.channel.id === channel.raw.id);
+    const timer = activeTimers.find(t => t.channelId === channel.raw.id);
+    if (liveVideo && timer) {
+      const liveInfoContainer = favoriteCard.querySelector(`[id^='live_info_']`);
+      if (liveInfoContainer) {
+          liveInfoContainer.innerHTML = "";
+          const liveDiv = createLiveDiv(liveVideo, timer);
+          liveInfoContainer.appendChild(liveDiv);
+          liveInfoContainer.style.display = "block";
       }
-
-      favoritesContainer.appendChild(clone);
+    } else {
+      const scheduledVideo = scheduledVideos.find(v => v.raw.channel.id === channel.raw.id);
+      if (scheduledVideo) {
+          const scheduleInfoContainer = favoriteCard.querySelector(`[id^='scheduled_info_']`);
+          if (scheduleInfoContainer) {
+              scheduleInfoContainer.innerHTML = "";
+              const scheduleCard = createScheduleCard(scheduledVideo);
+              scheduleInfoContainer.appendChild(scheduleCard);
+              scheduleInfoContainer.style.display = "block";
+          }
+      }
     }
+    favoritesContainer.appendChild(favoriteCard);
   });
   updateLiveFavorites();
 
@@ -650,7 +666,8 @@ function updateCardLiveStatus(channelId, video, timer) {
             const liveDiv = createLiveDiv(video, timer);
             liveInfoContainer.appendChild(liveDiv);
             liveInfoContainer.style.display = "block";
-            liveInfoContainer.addEventListener("click", () => window.ipcRender.send("live_url:send", video.raw.id));
+    liveInfoContainer.style.display = "block";
+            // Event listener handled by delegation
             
             const scheduleInfoContainer = card.querySelector(`[id^='scheduled_info_']`);
             // Hide schedule info only if the card is in the main LIVE section
@@ -725,4 +742,50 @@ function topic(value) {
     topicDiv.innerHTML = `<span style="${style}">${icon} ${text}</span>`;
   }
   return topicDiv;
+}
+
+// --- Event Delegation Setup ---
+function setupEventListeners() {
+  const mainContainer = document.getElementById('main');
+  mainContainer.addEventListener('click', (event) => {
+    const target = event.target;
+    const article = target.closest('.artile');
+    if (!article) return;
+
+    const channelId = article.dataset.channelId;
+    if (!channelId) return;
+
+    // Handle favorite button clicks
+    if (target.matches('.favorite-btn')) {
+      event.stopPropagation();
+      toggleFavorite(channelId);
+      return;
+    }
+
+    // Handle clicks on live stream info
+    const liveInfo = target.closest('.live-info-content');
+    if (liveInfo) {
+      const liveVideo = liveVideos.find(v => v.raw.channel.id === channelId);
+      if (liveVideo) {
+        window.ipcRender.send("live_url:send", liveVideo.raw.id);
+      }
+      return;
+    }
+    
+    // Handle clicks on scheduled stream info
+    const scheduleItem = target.closest('.schedule-item');
+    if (scheduleItem) {
+      const scheduledVideo = scheduledVideos.find(v => v.raw.channel.id === channelId);
+      if (scheduledVideo) {
+        window.ipcRender.send("live_url:send", scheduledVideo.raw.id);
+      }
+      return;
+    }
+
+    // Handle clicks on the name or photo to open the channel URL
+    if (target.matches('.eng_name, .photo')) {
+      window.ipcRender.send("channel_url:send", channelId);
+      return;
+    }
+  });
 }
