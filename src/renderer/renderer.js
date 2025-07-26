@@ -192,6 +192,7 @@ window.ipcRender.receive("channel:load", (data) => {
     createChannelGroup(groupName, channelsByGroup[groupName]);
   }
   updateFavoritesSection();
+  initSortable();
 });
 
 
@@ -605,6 +606,24 @@ function updateFavoritesSection() {
     favoritesDetails.open = false;
   } else {
     favoritesDetails.classList.remove('disabled-details');
+  }
+}
+
+function initSortable() {
+  const favoritesContainer = document.getElementById('favorites');
+  if (favoritesContainer) {
+    new Sortable(favoritesContainer, {
+      animation: 150,
+      ghostClass: 'sortable-ghost',
+      onEnd: function (evt) {
+        const newFavoritesOrder = Array.from(evt.to.children).map(el => {
+          const id = el.id.replace('profile_article_', '');
+          return id;
+        });
+        favorites = newFavoritesOrder;
+        window.ipcRender.send("setting:save", { favorites: favorites });
+      }
+    });
   }
 }
 

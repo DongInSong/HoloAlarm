@@ -350,6 +350,13 @@ dialog[open] > article {
   perspective: 1000px;
 }
 
+/* 10. SortableJS Styles
+-------------------------------------------------- */
+.sortable-ghost {
+  opacity: 0.4;
+  background-color: var(--holo-blue-dark);
+}
+
 @keyframes shake {
   10%, 90% {
     transform: translate3d(-1px, 0, 0);
