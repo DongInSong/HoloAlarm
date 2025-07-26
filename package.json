@@ -1,6 +1,6 @@
 {
   "name": "holo-alarm",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A desktop app to get notifications for Hololive live streams.",
   "main": "src/main/main.js",
   "scripts": {
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/DongInSong/HoloAlarm#readme",
   "devDependencies": {
-    "electron": "^37.2.3",
+    "electron": "^28.2.3",
     "electron-builder": "^24.4.0"
   },
   "dependencies": {
