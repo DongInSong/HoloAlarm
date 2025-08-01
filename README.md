@@ -65,8 +65,8 @@ To build and run this application locally, follow these steps:
 
 1.  **Clone the repository:**
     ```bash
-git clone https://github.com/DongInSong/HoloAlarm.git
-cd HoloAlarm
+    git clone https://github.com/DongInSong/HoloAlarm.git
+    cd HoloAlarm
     ```
 
 2.  **Install dependencies:**
