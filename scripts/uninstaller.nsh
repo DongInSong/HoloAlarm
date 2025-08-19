@@ -1,10 +1,3 @@
-Var isUpdate
-
-Function un.onInit
-  StrCmp $1 "update" 0 +2
-  StrCpy $isUpdate "true"
-FunctionEnd
-
 !macro customUnInstall
 
   DetailPrint "Closing ${PRODUCT_NAME}..."
@@ -17,41 +10,26 @@ FunctionEnd
 
   ExecWait 'taskkill /F /IM "${APP_FILENAME}.exe"'
 
-  StrCpy $R2 0
-  loop:
-    nsExec::ExecToStack 'powershell -Command "if (Get-Process -Name ${APP_FILENAME} -ErrorAction SilentlyContinue) { exit 1 } else { exit 0 }"'
-    Pop $R3
-    Pop $R4
-    IntCmp $R3 0 done loop_continue
-  loop_continue:
-    Sleep 1000
-    IntOp $R2 $R2 + 1
-    IntCmp $R2 5 done loop
-
-  done:
-
-  ; LOCALAPPDATA 경로 가져오기
+  ; 설치 폴더 삭제
   System::Call 'Kernel32::GetEnvironmentVariable(t, t, i) i("LOCALAPPDATA", .R0, 260)'
-
-  ; holo-alarm 설치 폴더 삭제
   StrCpy $R5 "$R0\Programs\${PRODUCT_NAME}"
   DetailPrint "Removing app folder: $R5"
   RMDir /r "$R5"
 
-  ; holo-alarm-updater 폴더 삭제
+  ; 업데이터 폴더 삭제
   StrCpy $R6 "$R0\holo-alarm-updater"
   DetailPrint "Removing updater folder: $R6"
   RMDir /r "$R6"
 
-  ; APPDATA(Roaming) 경로 가져오기
-  StrCmp $isUpdate "true" +3
+  ; 유저 데이터 삭제 여부
+  StrCmp $1 "update" 0 +4
     DetailPrint "Skipping user data removal on update"
-    Goto koniec
+    Goto afterUser
     System::Call 'Kernel32::GetEnvironmentVariable(t, t, i) i("APPDATA", .R0, 260)'
     StrCpy $R7 "$R0\holo-alarm"
     DetailPrint "Removing roaming app data folder: $R7"
     RMDir /r "$R7"
-  koniec:
+  afterUser:
 
   ; 바로가기 삭제
   Delete "$DESKTOP\${PRODUCT_NAME}.lnk"
