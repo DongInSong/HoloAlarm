@@ -1,3 +1,10 @@
+Var isUpdate
+
+Function un.onInit
+  StrCmp $1 "update" 0 +2
+  StrCpy $isUpdate "true"
+FunctionEnd
+
 !macro customUnInstall
 
   DetailPrint "Closing ${PRODUCT_NAME}..."
@@ -37,10 +44,14 @@
   RMDir /r "$R6"
 
   ; APPDATA(Roaming) 경로 가져오기
-  System::Call 'Kernel32::GetEnvironmentVariable(t, t, i) i("APPDATA", .R0, 260)'
-  StrCpy $R7 "$R0\holo-alarm"
-  DetailPrint "Removing roaming app data folder: $R7"
-  RMDir /r "$R7"
+  StrCmp $isUpdate "true" +3
+    DetailPrint "Skipping user data removal on update"
+    Goto koniec
+    System::Call 'Kernel32::GetEnvironmentVariable(t, t, i) i("APPDATA", .R0, 260)'
+    StrCpy $R7 "$R0\holo-alarm"
+    DetailPrint "Removing roaming app data folder: $R7"
+    RMDir /r "$R7"
+  koniec:
 
   ; 바로가기 삭제
   Delete "$DESKTOP\${PRODUCT_NAME}.lnk"

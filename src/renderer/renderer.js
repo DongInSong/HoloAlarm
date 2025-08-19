@@ -412,15 +412,14 @@ function createBaseCard(channel) {
 function createLiveCard(video, timer) {
     const liveContainer = document.getElementById("live");
     const channelId = video.raw.channel.id;
-    const originalArticle = document.getElementById(`profile_article_${channelId}`);
-    
-    if (originalArticle) {
-        const clone = originalArticle.cloneNode(true);
-        clone.id = `live_section_card_${channelId}`;
-        // Ensure data attribute is copied for event delegation
-        clone.dataset.channelId = channelId;
+    const channel = allChannels.find(c => c.raw.id === channelId);
 
-        const infoContainer = clone.querySelector('.info-container');
+    if (channel) {
+        // Create a fresh card instead of cloning
+        const liveCard = createBaseCard(channel);
+        liveCard.id = `live_section_card_${channelId}`;
+
+        const infoContainer = liveCard.querySelector('.info-container');
         
         // Remove placeholder footers
         const liveInfoPlaceholder = infoContainer.querySelector(`[id^='live_info_']`);
@@ -431,7 +430,7 @@ function createLiveCard(video, timer) {
         const liveDiv = createLiveDiv(video, timer);
         infoContainer.appendChild(liveDiv);
         
-        liveContainer.insertBefore(clone, liveContainer.firstChild);
+        liveContainer.insertBefore(liveCard, liveContainer.firstChild);
         
         // Update all cards for this channel
         updateCardLiveStatus(channelId, video, timer);
@@ -746,10 +745,11 @@ function topic(value) {
 
 // --- Event Delegation Setup ---
 function setupEventListeners() {
-  const mainContainer = document.getElementById('main');
-  mainContainer.addEventListener('click', (event) => {
+  // Attach to the body for more robust event handling
+  document.body.addEventListener('click', (event) => {
     const target = event.target;
-    const article = target.closest('.artile');
+    // Find the closest article, which is our card
+    const article = target.closest('article.artile');
     if (!article) return;
 
     const channelId = article.dataset.channelId;
