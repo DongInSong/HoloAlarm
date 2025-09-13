@@ -9,6 +9,7 @@ let apiKeyTestTimeout = null;
 
 const settingsBtn = document.getElementById("settings-btn");
 const actionBtn = document.getElementById("action-btn");
+const refreshBtn = document.getElementById("refresh-btn");
 const loadingOverlay = document.getElementById("loading-overlay");
 const settingsModal = document.getElementById("settings-modal");
 const closeBtn = settingsModal.querySelector(".close");
@@ -42,15 +43,21 @@ toggleApiKeyVisibilityBtn.addEventListener("click", () => {
   }
 });
 
-actionBtn.addEventListener("click", () => {
-  if (actionBtn.classList.contains("disabled")) return;
+refreshBtn.addEventListener("click", () => {
+  if (refreshBtn.classList.contains("disabled")) return;
+  window.ipcRender.send("data:refresh");
+  loadingOverlay.style.display = "flex";
+  refreshBtn.classList.add("disabled");
+});
 
+actionBtn.addEventListener("click", () => {
   const currentState = actionBtn.getAttribute("states");
 
-  if (currentState === "reload") {
-    window.ipcRender.send("data:refresh");
-    loadingOverlay.style.display = "flex";
-    actionBtn.classList.add("disabled");
+  if (currentState === "close") {
+    const allDetails = document.querySelectorAll("details");
+    allDetails.forEach((detail) => {
+      detail.removeAttribute("open");
+    });
   } else {
     scrollUp();
   }
@@ -183,14 +190,14 @@ window.onscroll = function () {
     // Add a small buffer
     actionBtn.setAttribute("states", "scrollUp");
     if (icon) {
-      icon.classList.remove("fa-sync-alt");
+      icon.classList.remove("fa-compress-arrows-alt");
       icon.classList.add("fa-arrow-up");
     }
   } else {
-    actionBtn.setAttribute("states", "reload");
+    actionBtn.setAttribute("states", "close");
     if (icon) {
       icon.classList.remove("fa-arrow-up");
-      icon.classList.add("fa-sync-alt");
+      icon.classList.add("fa-compress-arrows-alt");
     }
   }
 };
@@ -297,18 +304,13 @@ window.ipcRender.receive("api-key:test-result", ({ success, message }) => {
 });
 
 window.ipcRender.receive("api-key:updated", () => {
-  alert("API key has been updated. The app will now refresh.");
+  // alert("API key has been updated. The app will now refresh.");
   window.ipcRender.send("app:reload");
 });
 
 window.ipcRender.receive("data:refresh-done", () => {
   loadingOverlay.style.display = "none";
-  actionBtn.classList.remove("disabled");
-
-  const allDetails = document.querySelectorAll("details");
-  allDetails.forEach((detail) => {
-    detail.removeAttribute("open");
-  });
+  refreshBtn.classList.remove("disabled");
 });
 
 window.ipcRender.receive("api:error", (error) => {

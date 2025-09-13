@@ -48,6 +48,22 @@ body {
   height: auto;
 }
 
+body::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px; /* 그라데이션 높이 */
+  background: linear-gradient(to top, var(--background-color) 20%, transparent);
+  pointer-events: none; /* 그라데이션이 클릭을 방해하지 않도록 설정 */
+  z-index: 9; /* 버튼 컨테이너(z-index: 10) 바로 아래에 위치 */
+}
+
+main {
+  margin-bottom: 50px; /* for gradation */
+}
+
 /* 2. Main Layout & Containers
 -------------------------------------------------- */
 .items {
@@ -63,14 +79,16 @@ body {
 .button-container {
   position: fixed;
   bottom: 15px;
-  right: 15px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10;
   pointer-events: none; /* Allow clicks to pass through the container */
 }
 
+
 .right-buttons {
   display: flex;
-  gap: 10px; /* Space between right-side buttons */
+  gap: 20px; /* Space between right-side buttons */
 }
 
 .settings, .reload {
@@ -86,6 +104,7 @@ body {
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s ease, transform 0.2s ease;
+  margin-bottom: 10px;
 }
 
 .settings:hover, .reload:hover {

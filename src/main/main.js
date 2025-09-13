@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Notification, Tray, Menu, nativeImage, shell, screen } = require("electron");
+const { app, BrowserWindow, ipcMain, Notification, Tray, Menu, nativeImage, shell, screen, nativeTheme } = require("electron");
 
 let mainWindow;
 let isQuitting = false;
@@ -101,6 +101,7 @@ function isWindowVisible(windowBounds) {
 
 app.once("ready", (e) => {
   const settings = settingsManager.readSetting();
+  nativeTheme.themeSource = settings.theme || "light";
   let windowBounds = settings.windowBounds;
 
   if (!isWindowVisible(windowBounds)) {
@@ -122,6 +123,7 @@ app.once("ready", (e) => {
   const window = new BrowserWindow({
     width: windowBounds.width,
     height: windowBounds.height,
+    backgroundColor: nativeTheme.shouldUseDarkColors ? "#232931" : "#f7f9fc",
     minWidth: 350,
     maxWidth: 500,
     minHeight: 400,
@@ -236,6 +238,13 @@ app.once("ready", (e) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         // mainWindow.webContents.send("api-key:updated");
         BrowserWindow.fromWebContents(event.sender).reload();
+      }
+    }
+    if ("theme" in content && content.theme !== oldSettings.theme) {
+      nativeTheme.themeSource = content.theme;
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        const newBgColor = content.theme === 'dark' ? "#232931" : "#f7f9fc";
+        mainWindow.setBackgroundColor(newBgColor);
       }
     }
   });
