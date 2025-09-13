@@ -61,7 +61,8 @@ const packageJson = require("../../package.json");
 
 app.on("ready", async () => {
   log.info("App is ready.");
-  app.setAppUserModelId(packageJson.build.productName);
+  // app.setAppUserModelId(packageJson.build.productName);
+  app.setAppUserModelId("HoloAlarm");
   // The updater call will be moved to after the window is created.
   if (!isDevelopment) {
     log.info("Setting up launch at start.");
