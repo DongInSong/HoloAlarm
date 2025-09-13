@@ -56,13 +56,20 @@
           Settings
         </header>
 
-        <fieldset>
+        <fieldset style="margin-bottom: 16px;">
           <legend style="font-weight: bold; font-size: 1.1rem">API</legend>
           <p style="margin-bottom: 0.5rem">
             Please enter your Holodex API key. You can get your API key from
             <a href="https://holodex.net/login" target="_blank">holodex.net</a>.
           </p>
-          <input type="text" id="api-key-input" placeholder="API Key" style="margin-bottom: 20px;" />
+          <label for="api-key-input">
+            API Key
+            <div class="input-with-icon-wrapper">
+              <input type="password" id="api-key-input" placeholder="API Key" />
+              <button id="toggle-api-key-visibility-btn" class="icon-btn"><i class="fas fa-eye"></i></button>
+            </div>
+          </label>
+          <small id="api-key-status-message" style="height: 1rem; margin-top: 0.25rem;"></small>
         </fieldset>
         <hr />
         <fieldset>
@@ -81,7 +88,7 @@
           <legend style="font-weight: bold; font-size: 1.1rem">Tray</legend>
           <label for="close-action-select">
             Close button action
-            <select id="close-action-select" style="margin-bottom: 4px;">
+            <select id="close-action-select">
               <option value="tray">Minimize to tray</option>
               <option value="exit">Exit application</option>
             </select>

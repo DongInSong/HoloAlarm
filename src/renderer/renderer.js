@@ -5,6 +5,7 @@ let liveVideos = [];
 let scheduledVideos = [];
 let timerIntervalId = null;
 let currentSettings = {};
+let apiKeyTestTimeout = null;
 
 const settingsBtn = document.getElementById('settings-btn');
 const actionBtn = document.getElementById('action-btn');
@@ -12,6 +13,8 @@ const loadingOverlay = document.getElementById('loading-overlay');
 const settingsModal = document.getElementById('settings-modal');
 const closeBtn = settingsModal.querySelector('.close');
 const apiKeyInput = document.getElementById('api-key-input');
+const toggleApiKeyVisibilityBtn = document.getElementById('toggle-api-key-visibility-btn');
+const apiKeyStatusMessage = document.getElementById('api-key-status-message');
 const saveApiKeyBtn = document.getElementById('save-api-key');
 const themeSwitch = document.getElementById('theme-switch');
 const closeActionSelect = document.getElementById('close-action-select');
@@ -26,6 +29,19 @@ const checkForUpdateBtn = document.getElementById('check-for-update-btn');
 // const updateStatusP = document.getElementById('update-status'); // No longer needed
 
 // --- Event Listeners ---
+toggleApiKeyVisibilityBtn.addEventListener('click', () => {
+  const icon = toggleApiKeyVisibilityBtn.querySelector('i');
+  if (apiKeyInput.type === 'password') {
+    apiKeyInput.type = 'text';
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    apiKeyInput.type = 'password';
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+});
+
 actionBtn.addEventListener('click', () => {
   if (actionBtn.classList.contains('disabled')) return;
 
@@ -48,9 +64,13 @@ checkForUpdateBtn.addEventListener('click', (event) => {
 });
 
 settingsBtn.addEventListener('click', () => {
+  // Reset API key field based on saved verification status
+  setupApiKeyField(currentSettings.apiKeyVerified);
+
   // Store current settings when modal opens
   currentSettings = {
     apiKey: apiKeyInput.value,
+    apiKeyVerified: currentSettings.apiKeyVerified,
     theme: themeSwitch.checked,
     closeAction: closeActionSelect.value,
     notifyOnTray: notifyOnTraySwitch.checked,
@@ -86,10 +106,7 @@ closeBtn.addEventListener('click', (e) => {
 
 // Also handle closing via the ESC key or clicking the backdrop
 settingsModal.addEventListener('close', () => {
-    // The 'close' event fires for both programmatic and user-initiated closes.
-    // We only want to restore if it wasn't saved. A simple way is to check
-    // if the modal is still open, which it won't be if closed via button.
-    // A better approach might be a flag, but this works for now.
+    clearTimeout(apiKeyTestTimeout); // Cancel any pending test
     if (settingsModal.open) {
       restoreSettings();
     }
@@ -110,7 +127,8 @@ saveApiKeyBtn.addEventListener('click', () => {
   }
 
   const settingsToSave = {
-    apiKey: apiKey,
+    apiKey: apiKeyInput.value.trim(),
+    apiKeyVerified: true, // Mark as verified
     theme: themeSwitch.checked ? 'dark' : 'light',
     closeAction: closeActionSelect.value,
     notifyOnTray: notifyOnTraySwitch.checked,
@@ -125,7 +143,23 @@ saveApiKeyBtn.addEventListener('click', () => {
 
 
 apiKeyInput.addEventListener('input', () => {
-  // Remove error style when user starts typing
+  saveApiKeyBtn.disabled = true;
+  apiKeyStatusMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Waiting for you to finish typing...';
+  apiKeyStatusMessage.classList.remove('status-success', 'status-error');
+
+  // Debounce the API key test
+  clearTimeout(apiKeyTestTimeout);
+  apiKeyTestTimeout = setTimeout(() => {
+    const apiKey = apiKeyInput.value.trim();
+    if (apiKey) {
+      apiKeyStatusMessage.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+      window.ipcRender.send('api-key:test', apiKey);
+    } else {
+      apiKeyStatusMessage.innerHTML = `<i class="fas fa-times-circle"></i> API key cannot be empty.`;
+      apiKeyStatusMessage.classList.add('status-error');
+    }
+  }, 1000); // Wait 1 second after user stops typing
+
   if (apiKeyInput.value.trim()) {
     apiKeyInput.classList.remove('input-error');
   }
@@ -164,6 +198,7 @@ window.ipcRender.receive("setting:load", (data) => {
   // Store initial settings
   currentSettings = {
     apiKey: data.apiKey || '',
+    apiKeyVerified: data.apiKeyVerified || false,
     theme: data.theme === 'dark',
     closeAction: data.closeAction || 'tray',
     notifyOnTray: data.notifyOnTray === undefined ? true : data.notifyOnTray,
@@ -174,7 +209,6 @@ window.ipcRender.receive("setting:load", (data) => {
 
   apiKeyInput.value = data.apiKey || '';
   if (!data.apiKey) {
-    // Just show the modal, don't set error state yet
     settingsModal.showModal();
   }
   
@@ -206,7 +240,6 @@ window.ipcRender.receive('update:status', ({ status, data }) => {
   console.log('Update status received:', status, data);
   const updateIcon = checkForUpdateBtn.querySelector('i');
   
-  // Always re-enable the button unless checking is in progress
   checkForUpdateBtn.classList.remove('disabled');
   if (updateIcon) updateIcon.classList.remove('fa-spin');
 
@@ -218,7 +251,6 @@ window.ipcRender.receive('update:status', ({ status, data }) => {
     case 'current-version':
       currentVersionSpan.innerText = data;
       break;
-    // Other statuses are now handled by main process notifications
   }
 });
 
@@ -229,7 +261,6 @@ window.ipcRender.receive("channel:load", (data) => {
 
   allChannels = data;
   
-  // Clear existing channel groups except for LIVE and Favorites
   const detailsToRemove = mainContainer.querySelectorAll("details:not(#live-details):not(#favorites-details)");
   detailsToRemove.forEach(d => d.remove());
 
@@ -248,11 +279,30 @@ window.ipcRender.receive("channel:load", (data) => {
   initSortable();
 });
 
+window.ipcRender.receive('api-key:test-result', ({ success, message }) => {
+  apiKeyStatusMessage.classList.remove('status-success', 'status-error');
+  if (success) {
+    apiKeyStatusMessage.innerHTML = `<i class="fas fa-check-circle"></i> API Key is valid!`;
+    apiKeyStatusMessage.classList.add('status-success');
+    saveApiKeyBtn.disabled = false;
+    currentSettings.apiKeyVerified = true;
+  } else {
+    apiKeyStatusMessage.innerHTML = `<i class="fas fa-times-circle"></i> ${message}`;
+    apiKeyStatusMessage.classList.add('status-error');
+    saveApiKeyBtn.disabled = true;
+    currentSettings.apiKeyVerified = false;
+  }
+});
+
+window.ipcRender.receive('api-key:updated', () => {
+    alert('API key has been updated. The app will now refresh.');
+    window.ipcRender.send('app:reload');
+});
+
 window.ipcRender.receive("data:refresh-done", () => {
   loadingOverlay.style.display = 'none';
   actionBtn.classList.remove('disabled');
   
-  // Collapse all details sections
   const allDetails = document.querySelectorAll("details");
   allDetails.forEach((detail) => {
     detail.removeAttribute("open");
@@ -263,20 +313,17 @@ window.ipcRender.receive("data:refresh-done", () => {
 window.ipcRender.receive("api:error", (error) => {
   const mainContainer = document.getElementById("main");
   
-  // Clear content without removing the main details elements
   const liveContainer = document.getElementById("live");
   if (liveContainer) liveContainer.innerHTML = "";
 
   const favoritesContainer = document.getElementById("favorites");
   if (favoritesContainer) favoritesContainer.innerHTML = "";
 
-  // Remove only the dynamically generated channel groups
   if (mainContainer) {
     const detailsToRemove = mainContainer.querySelectorAll("details:not(#live-details):not(#favorites-details)");
     detailsToRemove.forEach(d => d.remove());
   }
 
-  // Close and disable Live and Favorites sections
   const liveDetails = document.getElementById('live-details');
   if (liveDetails) {
     liveDetails.removeAttribute('open');
@@ -305,47 +352,38 @@ window.ipcRender.receive("live:load", (newLiveVideos) => {
   const currentlyLiveIds = newLiveVideos.map(v => v.raw.channel.id);
   const previousLiveIds = activeTimers.map(t => t.channelId);
 
-  // Identify streams that have ended
   const endedStreamIds = previousLiveIds.filter(id => !currentlyLiveIds.includes(id));
   endedStreamIds.forEach(channelId => {
-    // Remove from live section
     const articleToRemove = document.getElementById(`live_section_card_${channelId}`);
     if (articleToRemove) liveContainer.removeChild(articleToRemove);
     
-    // Clear live info from all cards
     updateCardLiveStatus(channelId, null);
   });
   
-  // Filter out ended timers
   activeTimers = activeTimers.filter(timer => currentlyLiveIds.includes(timer.channelId));
 
-  // Add new or update existing streams
   newLiveVideos.forEach(video => {
     const channelId = video.raw.channel.id;
     let timer = activeTimers.find(t => t.channelId === channelId);
 
     if (!timer) {
-      // New live stream
       timer = {
         channelId: channelId,
         startTime: new Date(video.raw.start_actual),
-        elements: [] // Changed to elements array
+        elements: []
       };
       activeTimers.push(timer);
       createLiveCard(video, timer);
     } else {
-      // If timer already exists, check if startTime needs to be updated.
       if (isNaN(timer.startTime.getTime()) && video.raw.start_actual) {
         timer.startTime = new Date(video.raw.start_actual);
       }
-      // Update existing live info (viewers, etc.)
       const liveVideo = liveVideos.find(v => v.id === video.id);
       if (liveVideo) {
         Object.assign(liveVideo.raw, video.raw);
       }
       updateCardLiveStatus(channelId, video, timer);
       
-      // Also update the card in the LIVE section
       const liveSectionCard = document.getElementById(`live_section_card_${channelId}`);
       if (liveSectionCard) {
         const liveInfoContainer = liveSectionCard.querySelector('.live-info-content');
@@ -359,16 +397,14 @@ window.ipcRender.receive("live:load", (newLiveVideos) => {
     }
   });
 
-  // Manage timer loop
   if (activeTimers.length > 0 && !timerIntervalId) {
-    updateAllTimers(); // Run once immediately to avoid delay
+    updateAllTimers();
     timerIntervalId = setInterval(updateAllTimers, 1000);
   } else if (activeTimers.length === 0 && timerIntervalId) {
     clearInterval(timerIntervalId);
     timerIntervalId = null;
   }
 
-  // Disable details if empty
   if (liveContainer.children.length === 0) {
     liveDetails.classList.add('disabled-details');
   } else {
@@ -379,7 +415,6 @@ window.ipcRender.receive("live:load", (newLiveVideos) => {
 
 window.ipcRender.receive("scheduled:load", (newScheduledVideos) => {
   scheduledVideos = newScheduledVideos;
-  // Clear all existing schedule info first
   const allScheduledInfo = document.querySelectorAll("[id^='scheduled_info_']");
   allScheduledInfo.forEach(info => {
     info.innerHTML = "";
@@ -419,7 +454,7 @@ function createBaseCard(channel) {
     article.classList.add("artile");
     const uniqueId = channel.raw.id;
     article.id = `profile_article_${uniqueId}`;
-    article.dataset.channelId = uniqueId; // Use data attribute for easier event delegation
+    article.dataset.channelId = uniqueId;
     article.style.setProperty('--bg-image', `url(${channel.raw.photo})`);
     if (channel.raw.banner) article.dataset.bannerUrl = channel.raw.banner;
 
@@ -478,13 +513,11 @@ function createLiveCard(video, timer) {
     const channel = allChannels.find(c => c.raw.id === channelId);
 
     if (channel) {
-        // Create a fresh card instead of cloning
         const liveCard = createBaseCard(channel);
         liveCard.id = `live_section_card_${channelId}`;
 
         const infoContainer = liveCard.querySelector('.info-container');
         
-        // Remove placeholder footers
         const liveInfoPlaceholder = infoContainer.querySelector(`[id^='live_info_']`);
         if(liveInfoPlaceholder) liveInfoPlaceholder.remove();
         const scheduledInfoPlaceholder = infoContainer.querySelector(`[id^='scheduled_info_']`);
@@ -495,7 +528,6 @@ function createLiveCard(video, timer) {
         
         liveContainer.insertBefore(liveCard, liveContainer.firstChild);
         
-        // Update all cards for this channel
         updateCardLiveStatus(channelId, video, timer);
     }
 }
@@ -515,7 +547,6 @@ function createScheduleCard(video) {
     scheduledDiv.appendChild(schedule);
     scheduledDiv.appendChild(topicDiv);
     scheduledDiv.style.cursor = "pointer";
-    // Event listener handled by delegation
     
     return scheduledDiv;
 }
@@ -550,7 +581,6 @@ function createLiveDiv(video, timer) {
     liveDiv.appendChild(uptime);
     liveDiv.appendChild(viewerTopicContainer);
     liveDiv.style.cursor = "pointer";
-    // Event listener handled by delegation
     
     return liveDiv;
 }
@@ -583,19 +613,16 @@ function toggleFavorite(channelId) {
   const index = favorites.indexOf(channelId);
 
   if (index > -1) {
-    // Remove from favorites
     favorites.splice(index, 1);
     const cardToRemove = favoritesContainer.querySelector(`#profile_article_${channelId}`);
     if (cardToRemove) {
       cardToRemove.remove();
     }
   } else {
-    // Add to favorites
     favorites.push(channelId);
     const channel = allChannels.find(c => c.raw.id === channelId);
     if (channel) {
       const favoriteCard = createBaseCard(channel);
-      // Manually sync live/schedule status
       const liveVideo = liveVideos.find(v => v.raw.channel.id === channelId);
       const timer = activeTimers.find(t => t.channelId === channelId);
       if (liveVideo && timer) {
@@ -652,7 +679,6 @@ function updateFavoritesSection() {
   favoriteChannels.forEach(channel => {
     const favoriteCard = createBaseCard(channel);
 
-    // Manually sync live/schedule status
     const liveVideo = liveVideos.find(v => v.raw.channel.id === channel.raw.id);
     const timer = activeTimers.find(t => t.channelId === channel.raw.id);
     if (liveVideo && timer) {
@@ -724,21 +750,17 @@ function updateCardLiveStatus(channelId, video, timer) {
 
         liveInfoContainer.innerHTML = ""; // Clear previous content
         if (video) {
-            // If live, create and append live div
             const liveDiv = createLiveDiv(video, timer);
             liveInfoContainer.appendChild(liveDiv);
             liveInfoContainer.style.display = "block";
     liveInfoContainer.style.display = "block";
-            // Event listener handled by delegation
             
             const scheduleInfoContainer = card.querySelector(`[id^='scheduled_info_']`);
-            // Hide schedule info only if the card is in the main LIVE section
             if (scheduleInfoContainer && card.closest('#live')) {
                  scheduleInfoContainer.style.display = "none";
             }
 
         } else {
-            // If not live, hide container and check if schedule can be restored
             liveInfoContainer.style.display = "none";
             const scheduleInfoContainer = card.querySelector(`[id^='scheduled_info_']`);
             if (scheduleInfoContainer && scheduleInfoContainer.hasChildNodes()) {
@@ -757,7 +779,6 @@ function updateCardScheduleStatus(channelId, video) {
             const scheduleCard = createScheduleCard(video);
             scheduledInfoContainer.appendChild(scheduleCard);
             
-            // Only display if not currently live in a non-LIVE section card
             const liveInfoContainer = card.querySelector(`[id^='live_info_']`);
             if (!liveInfoContainer || liveInfoContainer.style.display === 'none' || !card.closest('#live')) {
                 scheduledInfoContainer.style.display = "block";
@@ -815,21 +836,18 @@ function setupEventListeners() {
   // Attach to the body for more robust event handling
   document.body.addEventListener('click', (event) => {
     const target = event.target;
-    // Find the closest article, which is our card
     const article = target.closest('article.artile');
     if (!article) return;
 
     const channelId = article.dataset.channelId;
     if (!channelId) return;
 
-    // Handle favorite button clicks
     if (target.matches('.favorite-btn')) {
       event.stopPropagation();
       toggleFavorite(channelId);
       return;
     }
 
-    // Handle clicks on live stream info
     const liveInfo = target.closest('.live-info-content');
     if (liveInfo) {
       const liveVideo = liveVideos.find(v => v.raw.channel.id === channelId);
@@ -839,7 +857,6 @@ function setupEventListeners() {
       return;
     }
     
-    // Handle clicks on scheduled stream info
     const scheduleItem = target.closest('.schedule-item');
     if (scheduleItem) {
       const scheduledVideo = scheduledVideos.find(v => v.raw.channel.id === channelId);
@@ -849,10 +866,27 @@ function setupEventListeners() {
       return;
     }
 
-    // Handle clicks on the name or photo to open the channel URL
     if (target.matches('.eng_name, .photo')) {
       window.ipcRender.send("channel_url:send", channelId);
       return;
     }
   });
+}
+
+function setupApiKeyField(isVerified) {
+    apiKeyStatusMessage.classList.remove('status-success', 'status-error');
+    apiKeyInput.disabled = false;
+
+    if (isVerified) {
+        saveApiKeyBtn.disabled = false;
+        apiKeyStatusMessage.innerHTML = `<i class="fas fa-check-circle"></i> API Key is verified.`;
+        apiKeyStatusMessage.classList.add('status-success');
+    } else {
+        saveApiKeyBtn.disabled = true;
+        apiKeyStatusMessage.innerHTML = ``; // Clear message
+        if (apiKeyInput.value) {
+            apiKeyStatusMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> API Key needs re-validation.`;
+            apiKeyStatusMessage.classList.add('status-error');
+        }
+    }
 }

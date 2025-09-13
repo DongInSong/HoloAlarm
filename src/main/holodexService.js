@@ -84,9 +84,26 @@ async function getChannels(org) {
   }
 }
 
+async function testApiKey(apiKey) {
+  if (!apiKey) return { success: false, message: 'API key cannot be empty.' };
+  try {
+    const testClient = new HolodexApiClient({ apiKey });
+    // A simple, low-cost call to check if the key is valid
+    await testClient.getChannel("UC4Fh9OcvIEWK405Cvg25jDw"); // Tokino Sora's channel
+    return { success: true };
+  } catch (error) {
+    // log.error("API Key test failed:", error);
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      return { success: false, message: 'Invalid API Key.' };
+    }
+    return { success: false, message: 'Failed to connect to Holodex.' };
+  }
+}
+
 module.exports = {
   initClient,
   getLiveVideo,
   getScheduledVideo,
   getChannels,
+  testApiKey,
 };

@@ -131,6 +131,46 @@ body {
   font-size: 1.1rem;
 }
 
+.input-with-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+#api-key-input {
+  width: 100%;
+  padding-right: 2.5rem; /* 아이콘 공간 확보 */
+  margin-bottom: 0 !important;
+  margin-top: 4px;
+}
+
+.icon-btn {
+  position: absolute;
+  right: 0.8rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0;
+  width: auto;
+  height: auto;
+  margin-bottom: 0 !important;
+}
+
+.small-btn {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+#api-key-status-message.status-success {
+  color: green !important;
+}
+
+#api-key-status-message.status-error {
+  color: var(--live-text-color) !important;
+}
+
 /* 4. Accordion (Details/Summary)
 -------------------------------------------------- */
 details {

@@ -231,7 +231,24 @@ app.once("ready", (e) => {
     // If the API key was changed, reload the window from the main process.
     if ("apiKey" in content && content.apiKey !== oldSettings.apiKey) {
       holodexService.initClient();
-      BrowserWindow.fromWebContents(event.sender).reload();
+      // Reload is now triggered from the renderer after user confirmation
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        // mainWindow.webContents.send("api-key:updated");
+        BrowserWindow.fromWebContents(event.sender).reload();
+      }
+    }
+  });
+
+  ipcMain.on('api-key:test', async (event, apiKey) => {
+    const result = await holodexService.testApiKey(apiKey);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      event.sender.send('api-key:test-result', result);
+    }
+  });
+
+  ipcMain.on('app:reload', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.reload();
     }
   });
 

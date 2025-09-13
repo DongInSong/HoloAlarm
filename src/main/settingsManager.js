@@ -22,6 +22,7 @@ function readSetting() {
     const settings = JSON.parse(fs.readFileSync(settingsFilePath, "utf8"));
     if (!settings.favorites) settings.favorites = [];
     if (!settings.apiKey) settings.apiKey = null;
+    if (settings.apiKeyVerified === undefined) settings.apiKeyVerified = false;
     if (settings.launchAtStartup === undefined) settings.launchAtStartup = false;
     if (settings.startInTray === undefined) settings.startInTray = true;
     return settings;
@@ -29,6 +30,7 @@ function readSetting() {
     const defaultSetting = {
       favorites: [],
       apiKey: null,
+      apiKeyVerified: false,
       theme: "light",
       liveNotifications: "favorites",
       notifyOnTray: true,
