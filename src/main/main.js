@@ -256,11 +256,9 @@ app.once("ready", (e) => {
   ipcMain.on('data:refresh', async () => {
     try {
       // Run all loads in parallel for efficiency
-      await Promise.all([
-        load_channels(),
-        load_lives(),
-        load_schedule()
-      ]);
+      await load_channels()
+        .then(() => load_lives())
+        .then(() => load_schedule());
     } catch (error) {
       log.error("[Refresh] Error during manual refresh in Promise.all:", error.message);
       // The error is already handled and re-thrown in the individual functions,
