@@ -56,12 +56,23 @@ body {
 
 /* 3. Buttons
 -------------------------------------------------- */
-.reload, .settings {
-  z-index: 10;
+.button-container {
   position: fixed;
+  bottom: 15px;
+  right: 15px;
+  z-index: 10;
+  pointer-events: none; /* Allow clicks to pass through the container */
+}
+
+.right-buttons {
+  display: flex;
+  gap: 10px; /* Space between right-side buttons */
+}
+
+.settings, .reload {
+  pointer-events: auto; /* Enable clicks on buttons */
   width: 48px;
   height: 48px;
-  bottom: 15px;
   background-color: var(--card-background);
   color: var(--text-primary);
   border-radius: 50%;
@@ -73,17 +84,47 @@ body {
   transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-.reload {
-  right: 15px;
-}
-
-.settings {
-  right: 75px;
-}
-
-.reload:hover, .settings:hover {
-  /* background-color: var(--holo-blue); */
+.settings:hover, .reload:hover {
   transform: translateY(-2px);
+}
+
+#action-btn.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+#action-btn.disabled .fa-sync-alt {
+  animation: fa-spin 1s linear infinite;
+}
+
+/* Loading Overlay */
+#loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  color: white;
+}
+
+.loading-spinner {
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top: 4px solid var(--holo-blue);
+  width: 40px;
+  height: 40px;
+  animation: fa-spin 1s linear infinite;
+}
+
+#loading-overlay p {
+  margin-top: 1rem;
+  font-size: 1.1rem;
 }
 
 /* 4. Accordion (Details/Summary)

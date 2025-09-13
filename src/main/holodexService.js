@@ -35,7 +35,7 @@ initClient();
 async function getLiveVideo(org) {
   if (!client) return Promise.resolve([]);
   try {
-    return await await client.getLiveVideos({
+    return await client.getLiveVideos({
       org: org,
       status: "live",
       include: ["live_info"],

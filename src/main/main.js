@@ -15,6 +15,10 @@ const path = require("path");
 const log = require("electron-log");
 const updater = require("./updater");
 
+// Configure electron-log for development
+log.transports.file.level = false; // Disable file logging
+log.transports.console.level = 'info'; // Enable console logging
+
 log.info("App starting...");
 
 // app.commandLine.appendSwitch("high-dpi-support", "true");
@@ -57,7 +61,7 @@ const packageJson = require("../../package.json");
 
 app.on("ready", async () => {
   log.info("App is ready.");
-  app.setAppUserModelId(packageJson.name);
+  app.setAppUserModelId(packageJson.build.productName);
   // The updater call will be moved to after the window is created.
   if (!isDevelopment) {
     log.info("Setting up launch at start.");
@@ -181,21 +185,12 @@ app.once("ready", (e) => {
     // Send version info
     window.webContents.send("update:status", { status: "current-version", data: app.getVersion() });
 
-    if (isDevelopment) {
-      load_channels()
-        .then(() => load_lives())
-        .then(() => load_schedule());
+    load_channels()
+      .then(() => load_lives())
+      .then(() => load_schedule());
 
-      start_update_lives();
-      start_update_schedules();
-    } else if (!isDevelopment) {
-      load_channels()
-        .then(() => load_lives())
-        .then(() => load_schedule());
-
-      start_update_lives();
-      start_update_schedules();
-    }
+    start_update_lives();
+    start_update_schedules();
   });
 
   window.on("hide", (e) => {
@@ -240,6 +235,26 @@ app.once("ready", (e) => {
     }
   });
 
+  ipcMain.on('data:refresh', async () => {
+    try {
+      // Run all loads in parallel for efficiency
+      await Promise.all([
+        load_channels(),
+        load_lives(),
+        load_schedule()
+      ]);
+    } catch (error) {
+      log.error("[Refresh] Error during manual refresh in Promise.all:", error.message);
+      // The error is already handled and re-thrown in the individual functions,
+      // but we catch it here to prevent unhandled promise rejections.
+    } finally {
+      // Ensure the loading overlay is always removed
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("data:refresh-done");
+      }
+    }
+  });
+
 
   function start_update_lives() {
     lives = setInterval(() => {
@@ -276,7 +291,9 @@ app.once("ready", (e) => {
     return holodexService
       .getLiveVideo("Hololive")
       .then((lives) => {
-        window.webContents.send("live:load", lives);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          window.webContents.send("live:load", lives);
+        }
 
         const settings = settingsManager.readSetting();
         if (settings.liveNotifications === "none") {
@@ -306,24 +323,37 @@ app.once("ready", (e) => {
       })
       .catch((error) => {
         handleApiError(error, "live streams");
+        throw error; // Re-throw the error to be caught by Promise.all
       });
   }
 
   async function load_channels() {
     try {
       const channels = await holodexService.getChannels("Hololive");
-      window.webContents.send("channel:load", channels);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        window.webContents.send("channel:load", channels);
+      }
+      // Pre-cache all channel images after loading channels successfully
+      channels.forEach(channel => {
+        if (channel.raw && channel.raw.photo && channel.raw.id) {
+          imageManager.downloadAndCacheImage(channel.raw.photo, channel.raw.id, () => {});
+        }
+      });
     } catch (error) {
       handleApiError(error, "channels");
+      throw error; // Re-throw the error to be caught by Promise.all
     }
   }
 
   async function load_schedule() {
     try {
       const schedules = await holodexService.getScheduledVideo("Hololive");
-      window.webContents.send("scheduled:load", schedules);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        window.webContents.send("scheduled:load", schedules);
+      }
     } catch (error) {
       handleApiError(error, "schedules");
+      throw error; // Re-throw the error to be caught by Promise.all
     }
   }
 });

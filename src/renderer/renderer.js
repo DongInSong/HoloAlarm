@@ -4,8 +4,11 @@ let activeTimers = [];
 let liveVideos = [];
 let scheduledVideos = [];
 let timerIntervalId = null;
+let currentSettings = {};
 
 const settingsBtn = document.getElementById('settings-btn');
+const actionBtn = document.getElementById('action-btn');
+const loadingOverlay = document.getElementById('loading-overlay');
 const settingsModal = document.getElementById('settings-modal');
 const closeBtn = settingsModal.querySelector('.close');
 const apiKeyInput = document.getElementById('api-key-input');
@@ -23,6 +26,20 @@ const checkForUpdateBtn = document.getElementById('check-for-update-btn');
 // const updateStatusP = document.getElementById('update-status'); // No longer needed
 
 // --- Event Listeners ---
+actionBtn.addEventListener('click', () => {
+  if (actionBtn.classList.contains('disabled')) return;
+
+  const currentState = actionBtn.getAttribute('states');
+
+  if (currentState === 'reload') {
+    window.ipcRender.send('data:refresh');
+    loadingOverlay.style.display = 'flex';
+    actionBtn.classList.add('disabled');
+  } else {
+    scrollUp();
+  }
+});
+
 checkForUpdateBtn.addEventListener('click', (event) => {
   event.preventDefault(); // Prevent default link behavior
   if (checkForUpdateBtn.classList.contains('disabled')) return;
@@ -31,15 +48,51 @@ checkForUpdateBtn.addEventListener('click', (event) => {
 });
 
 settingsBtn.addEventListener('click', () => {
+  // Store current settings when modal opens
+  currentSettings = {
+    apiKey: apiKeyInput.value,
+    theme: themeSwitch.checked,
+    closeAction: closeActionSelect.value,
+    notifyOnTray: notifyOnTraySwitch.checked,
+    liveNotifications: liveNotificationSelect.value,
+    launchAtStartup: launchAtStartupSwitch.checked,
+    startInTray: startInTrayRadio.checked
+  };
+  
   // Remove error styles when opening the modal
   apiKeyInput.classList.remove('input-error');
   apiKeyInput.classList.remove('shake');
   settingsModal.showModal();
 });
 
+function restoreSettings() {
+  apiKeyInput.value = currentSettings.apiKey;
+  themeSwitch.checked = currentSettings.theme;
+  document.documentElement.setAttribute('data-theme', currentSettings.theme ? 'dark' : 'light');
+  closeActionSelect.value = currentSettings.closeAction;
+  notifyOnTraySwitch.checked = currentSettings.notifyOnTray;
+  liveNotificationSelect.value = currentSettings.liveNotifications;
+  launchAtStartupSwitch.checked = currentSettings.launchAtStartup;
+  startupOptions.disabled = !currentSettings.launchAtStartup;
+  startInTrayRadio.checked = currentSettings.startInTray;
+  showWindowRadio.checked = !currentSettings.startInTray;
+}
+
 closeBtn.addEventListener('click', (e) => {
   e.preventDefault();
+  restoreSettings();
   settingsModal.close();
+});
+
+// Also handle closing via the ESC key or clicking the backdrop
+settingsModal.addEventListener('close', () => {
+    // The 'close' event fires for both programmatic and user-initiated closes.
+    // We only want to restore if it wasn't saved. A simple way is to check
+    // if the modal is still open, which it won't be if closed via button.
+    // A better approach might be a flag, but this works for now.
+    if (settingsModal.open) {
+      restoreSettings();
+    }
 });
 
 saveApiKeyBtn.addEventListener('click', () => {
@@ -88,30 +141,19 @@ launchAtStartupSwitch.addEventListener('change', () => {
   startupOptions.disabled = !launchAtStartupSwitch.checked;
 });
 
-reload.addEventListener("click", (evt) => {
-  if (reload.states === "scrollUp") {
-    scrollUp();
-  } else {
-    const allDetails = document.querySelectorAll("details");
-    allDetails.forEach((detail) => {
-      detail.removeAttribute("open");
-    });
-  }
-});
-
 window.onscroll = function () {
-  const icon = reload.querySelector('i');
-  if (document.documentElement.scrollTop || document.body.scrollTop > 0) {
-    reload.states = "scrollUp";
+  const icon = actionBtn.querySelector('i');
+  if (document.documentElement.scrollTop || document.body.scrollTop > 20) { // Add a small buffer
+    actionBtn.setAttribute('states', 'scrollUp');
     if (icon) {
-      icon.classList.remove('fa-compress-arrows-alt');
+      icon.classList.remove('fa-sync-alt');
       icon.classList.add('fa-arrow-up');
     }
   } else {
-    reload.states = "reload";
+    actionBtn.setAttribute('states', 'reload');
     if (icon) {
       icon.classList.remove('fa-arrow-up');
-      icon.classList.add('fa-compress-arrows-alt');
+      icon.classList.add('fa-sync-alt');
     }
   }
 };
@@ -119,6 +161,17 @@ window.onscroll = function () {
 
 // --- IPC Renderers ---
 window.ipcRender.receive("setting:load", (data) => {
+  // Store initial settings
+  currentSettings = {
+    apiKey: data.apiKey || '',
+    theme: data.theme === 'dark',
+    closeAction: data.closeAction || 'tray',
+    notifyOnTray: data.notifyOnTray === undefined ? true : data.notifyOnTray,
+    liveNotifications: data.liveNotifications || 'all',
+    launchAtStartup: data.launchAtStartup === undefined ? false : data.launchAtStartup,
+    startInTray: data.startInTray === undefined ? true : data.startInTray
+  };
+
   apiKeyInput.value = data.apiKey || '';
   if (!data.apiKey) {
     // Just show the modal, don't set error state yet
@@ -147,7 +200,6 @@ window.ipcRender.receive("setting:load", (data) => {
   liveNotificationSelect.value = liveNotifications;
 
   favorites = data.favorites || [];
-  setupEventListeners(); // Setup the single listener
 });
 
 window.ipcRender.receive('update:status', ({ status, data }) => {
@@ -156,7 +208,7 @@ window.ipcRender.receive('update:status', ({ status, data }) => {
   
   // Always re-enable the button unless checking is in progress
   checkForUpdateBtn.classList.remove('disabled');
-  updateIcon.classList.remove('fa-spin');
+  if (updateIcon) updateIcon.classList.remove('fa-spin');
 
   switch (status) {
     case 'checking':
@@ -194,6 +246,17 @@ window.ipcRender.receive("channel:load", (data) => {
   }
   updateFavoritesSection();
   initSortable();
+});
+
+window.ipcRender.receive("data:refresh-done", () => {
+  loadingOverlay.style.display = 'none';
+  actionBtn.classList.remove('disabled');
+  
+  // Collapse all details sections
+  const allDetails = document.querySelectorAll("details");
+  allDetails.forEach((detail) => {
+    detail.removeAttribute("open");
+  });
 });
 
 
@@ -744,6 +807,10 @@ function topic(value) {
 }
 
 // --- Event Delegation Setup ---
+document.addEventListener('DOMContentLoaded', () => {
+  setupEventListeners();
+});
+
 function setupEventListeners() {
   // Attach to the body for more robust event handling
   document.body.addEventListener('click', (event) => {
