@@ -795,7 +795,7 @@ function topic(value) {
     switch (value) {
       case "Birthday":
         icon = "🍰";
-        style = "color: yellow; font-weight: bold;";
+        style = `color: var(--birthday-color); font-weight: bold; text-shadow: 0 0 2px var(--birthday-shadow);`;
         break;
       case "singing":
         icon = "🎶";
