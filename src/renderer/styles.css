@@ -88,10 +88,10 @@ main {
 
 .right-buttons {
   display: flex;
-  gap: 20px; /* Space between right-side buttons */
+  gap: 25px; /* Space between right-side buttons */
 }
 
-.settings, .reload {
+.settings, .reload, .holo {
   pointer-events: auto; /* Enable clicks on buttons */
   width: 48px;
   height: 48px;
@@ -107,7 +107,7 @@ main {
   margin-bottom: 10px;
 }
 
-.settings:hover, .reload:hover {
+.settings:hover, .reload:hover, .holo:hover {
   transform: translateY(-2px);
 }
 

@@ -53,14 +53,19 @@ refreshBtn.addEventListener("click", () => {
 actionBtn.addEventListener("click", () => {
   const currentState = actionBtn.getAttribute("states");
 
-  if (currentState === "close") {
-    const allDetails = document.querySelectorAll("details");
-    allDetails.forEach((detail) => {
+  if (currentState === "scrollUp") {
+    scrollUp();
+  } else if (currentState === "close") {
+    document.querySelectorAll("details").forEach((detail) => {
       detail.removeAttribute("open");
     });
-  } else {
-    scrollUp();
+  } else if (currentState === "openAll") {
+    document.querySelectorAll("details:not(.disabled-details)").forEach((detail) => {
+      detail.setAttribute("open", true);
+    });
   }
+  // After action, immediately update the button state
+  updateActionBtnState();
 });
 
 checkForUpdateBtn.addEventListener("click", (event) => {
@@ -184,23 +189,37 @@ launchAtStartupSwitch.addEventListener("change", () => {
   startupOptions.disabled = !launchAtStartupSwitch.checked;
 });
 
-window.onscroll = function () {
+function areAllDetailsClosed() {
+  // disabled details are not considered for this logic
+  const details = document.querySelectorAll("details:not(.disabled-details)");
+  return ![...details].some(d => d.hasAttribute("open"));
+}
+
+function updateActionBtnState() {
   const icon = actionBtn.querySelector("i");
-  if (document.documentElement.scrollTop || document.body.scrollTop > 20) {
-    // Add a small buffer
+  const isScrolled = document.documentElement.scrollTop || document.body.scrollTop > 20;
+
+  if (isScrolled) {
     actionBtn.setAttribute("states", "scrollUp");
-    if (icon) {
-      icon.classList.remove("fa-compress-arrows-alt");
-      icon.classList.add("fa-arrow-up");
-    }
+    icon.className = "fas fa-arrow-up";
+    icon.style.transform = "";
+    icon.style.fontSize = "16px";
   } else {
-    actionBtn.setAttribute("states", "close");
-    if (icon) {
-      icon.classList.remove("fa-arrow-up");
-      icon.classList.add("fa-compress-arrows-alt");
+    if (areAllDetailsClosed()) {
+      actionBtn.setAttribute("states", "openAll");
+      icon.className = "fa-solid fa-caret-up";
+      icon.style.transform = "rotate(90deg)";
+      icon.style.fontSize = "24px"; 
+    } else {
+      actionBtn.setAttribute("states", "close");
+      icon.className = "fas fa-compress-arrows-alt";
+      icon.style.transform = "";
+      icon.style.fontSize = "16px";
     }
   }
-};
+}
+
+window.onscroll = updateActionBtnState;
 
 // --- IPC Renderers ---
 window.ipcRender.receive("setting:load", (data) => {
@@ -847,6 +866,13 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function setupEventListeners() {
+  // Listen for details toggle events to update the action button
+  document.body.addEventListener("toggle", (event) => {
+    if (event.target.tagName === "DETAILS") {
+      updateActionBtnState();
+    }
+  }, true); // Use capture phase to ensure it fires
+
   // Attach to the body for more robust event handling
   document.body.addEventListener("click", (event) => {
     const target = event.target;
