@@ -181,7 +181,7 @@ app.once("ready", (e) => {
           click: (item, focusedWindow) => {
             if (focusedWindow) {
               const newZoomFactor = focusedWindow.webContents.zoomFactor - 0.1;
-              if (newZoomFactor >= 0.5) {
+              if (newZoomFactor >= 0.7) {
                 focusedWindow.webContents.zoomFactor = newZoomFactor;
               }
             }
