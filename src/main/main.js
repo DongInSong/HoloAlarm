@@ -144,6 +144,58 @@ app.once("ready", (e) => {
   });
   mainWindow = window;
 
+  if (settings.zoomFactor) {
+    mainWindow.webContents.zoomFactor = settings.zoomFactor;
+  }
+
+  const menuTemplate = [
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        {
+          label: 'Reset Zoom',
+          accelerator: 'CommandOrControl+0',
+          click: (item, focusedWindow) => {
+            if (focusedWindow) focusedWindow.webContents.zoomFactor = 1.0;
+          }
+        },
+        {
+          label: 'Zoom In',
+          accelerator: 'CommandOrControl+=',
+          click: (item, focusedWindow) => {
+            if (focusedWindow) {
+              const newZoomFactor = focusedWindow.webContents.zoomFactor + 0.1;
+              if (newZoomFactor <= 1.3) {
+                focusedWindow.webContents.zoomFactor = newZoomFactor;
+              }
+            }
+          }
+        },
+        {
+          label: 'Zoom Out',
+          accelerator: 'CommandOrControl+-',
+          click: (item, focusedWindow) => {
+            if (focusedWindow) {
+              const newZoomFactor = focusedWindow.webContents.zoomFactor - 0.1;
+              if (newZoomFactor >= 0.5) {
+                focusedWindow.webContents.zoomFactor = newZoomFactor;
+              }
+            }
+          }
+        },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
+
   // Pass the window object to the updater
   if (!isDevelopment) {
     log.info("Initializing updater.");
@@ -165,7 +217,8 @@ app.once("ready", (e) => {
     e.preventDefault();
 
    const bounds = window.getNormalBounds();
-   settingsManager.saveSetting({ windowBounds: bounds });
+   const zoomFactor = mainWindow.webContents.zoomFactor;
+   settingsManager.saveSetting({ windowBounds: bounds, zoomFactor: zoomFactor });
     const settings = settingsManager.readSetting();
     if (settings.closeAction === "exit") {
       isQuitting = true;
