@@ -578,6 +578,7 @@ function createScheduleCard(video) {
 function createLiveDiv(video, timer) {
   const liveDiv = document.createElement("div");
   liveDiv.className = "live-info-content";
+  liveDiv.dataset.videoId = video.raw.id; // Store video ID directly on the element
   if (video.raw.topic_id === "membersonly") liveDiv.setAttribute("data-theme", "light");
 
   const title = document.createElement("span");
@@ -889,11 +890,8 @@ function setupEventListeners() {
     }
 
     const liveInfo = target.closest(".live-info-content");
-    if (liveInfo) {
-      const liveVideo = liveVideos.find((v) => v.raw.channel.id === channelId);
-      if (liveVideo) {
-        window.ipcRender.send("live_url:send", liveVideo.raw.id);
-      }
+    if (liveInfo && liveInfo.dataset.videoId) {
+      window.ipcRender.send("live_url:send", liveInfo.dataset.videoId);
       return;
     }
 
