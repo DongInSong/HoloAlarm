@@ -119,7 +119,6 @@ app.once("ready", (e) => {
   }
 
   const targetDisplay = screen.getDisplayMatching(windowBounds) || screen.getPrimaryDisplay();
-  const shouldShowWindow = !process.argv.includes('--hidden');
   const window = new BrowserWindow({
     width: windowBounds.width,
     height: windowBounds.height,
@@ -130,7 +129,7 @@ app.once("ready", (e) => {
     maxHeight: targetDisplay.workArea.height,
     x: windowBounds.x,
     y: windowBounds.y,
-    show: shouldShowWindow,
+    show: false,
     autoHideMenuBar: true,
     minimizable: false,
     resizable: true,
@@ -205,9 +204,14 @@ app.once("ready", (e) => {
   if (isDevelopment) {
     window.webContents.openDevTools();
   }
-  if (shouldShowWindow) {
-    window.show();
-  }
+
+  // Use 'ready-to-show' to prevent visual flash and ensure renderer is ready
+  window.once('ready-to-show', () => {
+    const shouldShowWindow = !process.argv.includes('--hidden');
+    if (shouldShowWindow) {
+      window.show();
+    }
+  });
 
   window.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
   window.on("close", (e) => {
